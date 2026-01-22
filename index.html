@@ -3,109 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Méretező PRO v5.2</title>
+    <title>Elite Méretező PRO</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-color: rgba(48, 209, 88, 0.15); }
         
-        /* Témák */
-        body.theme-beton { --bg: #3a3a3a; --accent: #fff; --box-color: rgba(255,255,255,0.2); background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png'); }
-        body.theme-tegla { --bg: #7d3221; --accent: #ffce00; --box-color: rgba(255,206,0,0.2); background-image: url('https://www.transparenttextures.com/patterns/brick-wall.png'); }
-        body.theme-fa { --bg: #3e2723; --accent: #d7ccc8; --box-color: rgba(215,204,200,0.2); background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); }
+        /* Témák javítva */
+        body.theme-beton { --bg: #444; --accent: #00ffcc; --box-color: rgba(0,255,204,0.2); }
+        body.theme-tegla { --bg: #5d251a; --accent: #ff9900; --box-color: rgba(255,153,0,0.2); }
+        body.theme-fa { --bg: #2e1a0a; --accent: #e0c090; --box-color: rgba(224,192,144,0.2); }
 
         html, body { 
-            overscroll-behavior-y: contain !important;
             overscroll-behavior: none !important;
             overflow: hidden !important;
             position: fixed; width: 100%; height: 100%; margin: 0; padding: 0;
             background-color: var(--bg); color: #fff; font-family: sans-serif; touch-action: none;
         }
 
-        /* Belépő felület */
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 220px; margin: 10px; text-align: center; font-size: 16px; }
+        /* LÁTHATATLAN FAL (Anti-Refresh Barrier) */
+        #barrier {
+            position: fixed; top: 0; left: 0; width: 100%; height: 5px; 
+            z-index: 9999; background: transparent;
+        }
+
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 220px; margin: 10px; text-align: center; }
         
         #saved-device-btn { 
-            background: #1a1a1a; border: 2px solid var(--accent); color: #fff; 
-            padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 30px; cursor: pointer; display: none;
+            background: #111; border: 2px solid var(--accent); color: #fff; 
+            padding: 20px; border-radius: 12px; width: 260px; margin-bottom: 20px; text-align: center;
         }
 
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
 
-        /* Hajszálkereszt */
-        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; z-index: 5; }
-        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; z-index: 5; }
+        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; }
+        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; }
 
-        /* Mérőkeret */
-        #box { position: absolute; top: 150px; left: 150px; border: 2px solid var(--accent); background: var(--box-color); box-sizing: border-box; }
+        #box { position: absolute; border: 2px solid var(--accent); background: var(--box-color); box-sizing: border-box; }
 
-        /* FELEAKKORA GOMBOK (22px) */
-        .handle { width: 22px; height: 22px; border-radius: 50%; position: absolute; z-index: 100; border: 2px solid #000; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        #move-handle { top: -11px; left: -11px; background: #fff; cursor: move; }
-        #resize-handle { bottom: -11px; right: -11px; background: var(--accent); cursor: nwse-resize; }
+        .handle { width: 22px; height: 22px; border-radius: 50%; position: absolute; z-index: 100; border: 2px solid #000; }
+        #move-handle { top: -11px; left: -11px; background: #fff; }
+        #resize-handle { bottom: -11px; right: -11px; background: var(--accent); }
 
-        /* Feliratok az éleken */
-        .label-w { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); font-weight: bold; color: var(--accent); background: var(--bg); padding: 2px 6px; border-radius: 4px; white-space: nowrap; font-size: 14px; }
-        .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-weight: bold; color: var(--accent); width: 120px; text-align: center; background: var(--bg); font-size: 14px; }
+        .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-weight: bold; color: var(--accent); background: var(--bg); padding: 0 5px; font-size: 14px; white-space: nowrap; }
+        .label-h { position: absolute; left: -70px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-weight: bold; color: var(--accent); width: 120px; text-align: center; background: var(--bg); font-size: 14px; }
 
-        /* Alsó vezérlő */
         #controls {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(10,10,10,0.95); padding: 12px; border-radius: 15px; 
-            display: flex; flex-direction: column; gap: 10px; border: 1px solid #444; align-items: center; z-index: 1000;
+            position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.9); padding: 10px; border-radius: 12px; 
+            display: flex; gap: 5px; border: 1px solid #444; align-items: center; z-index: 1000;
         }
-        .input-row { display: flex; align-items: center; gap: 6px; }
-        .m-input { background: #000; border: 1px solid #666; color: #fff; padding: 8px; border-radius: 5px; width: 45px; text-align: center; font-size: 14px; }
-        .fine-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 16px; }
+        .m-input { background: #000; border: 1px solid #666; color: #fff; padding: 5px; border-radius: 4px; width: 40px; text-align: center; font-size: 13px; }
+        .fine-btn { background: #333; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
         
-        #theme-btn { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.7); border: 1px solid #666; color: #fff; padding: 10px 15px; border-radius: 10px; font-size: 13px; z-index: 1000; }
+        #theme-btn { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.5); border: 1px solid #666; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; z-index: 1000; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-<div id="overlay">
-    <div id="saved-device-btn" onclick="loadSaved()">
-        <div id="saved-name" style="font-weight:bold; font-size:20px;"></div>
-        <div id="saved-ppi" style="color:var(--accent); margin-top:8px; font-size:18px;"></div>
-        <div style="font-size:12px; color:#888; margin-top:10px;">Érintsd meg az indításhoz</div>
-    </div>
+<div id="barrier"></div>
 
-    <div id="new-device-form">
-        <h2 style="color:var(--accent); margin-bottom:20px;">Készülék Regisztráció</h2>
-        <input type="text" id="devName" class="setup-input" placeholder="Készülék név (pl. Tab S7 FE)">
-        <input type="number" id="ppiInput" class="setup-input" placeholder="PPI (pl. 243)">
-        <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; margin-top:10px; color:#000;">MENTÉS ÉS INDÍTÁS</button>
+<div id="overlay">
+    <div id="saved-device-btn" onclick="loadSaved()" style="display:none;">
+        <div id="saved-name" style="font-weight:bold;"></div>
+        <div id="saved-ppi" style="color:var(--accent); font-size:14px;"></div>
     </div>
-    
-    <button id="reset-btn" onclick="clearMemory()" style="margin-top:30px; background:none; border:none; color:#666; text-decoration:underline; display:none; font-size:14px;">Eszköz törlése / Váltás</button>
+    <div id="new-device-form">
+        <input type="text" id="devName" class="setup-input" placeholder="Készülék név">
+        <input type="number" id="ppiInput" class="setup-input" placeholder="PPI (pl. 243)">
+        <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:12px 30px; border-radius:8px; font-weight:bold;">INDÍTÁS</button>
+    </div>
 </div>
 
 <div id="canvas">
-    <button id="theme-btn" onclick="nextTheme()">🎨 Téma váltás</button>
-    
+    <button id="theme-btn" onclick="nextTheme()">TÉMA</button>
     <div id="gv" class="guide-v"></div>
     <div id="gh" class="guide-h"></div>
-
-    <div id="box">
+    <div id="box" style="top:100px; left:100px; width:100px; height:100px;">
         <div id="move-handle" class="handle"></div>
         <div id="label-w" class="label-w">0 mm</div>
         <div id="label-h" class="label-h">0 mm</div>
         <div id="resize-handle" class="handle"></div>
     </div>
-
     <div id="controls">
-        <div class="input-row">
-            <span style="font-size:12px; color:#aaa;">Szél:</span>
-            <button class="fine-btn" onclick="step('w', -0.1)">-</button>
-            <input type="number" id="m-w" class="m-input" step="0.1" placeholder="mm">
-            <button class="fine-btn" onclick="step('w', 0.1)">+</button>
-            
-            <span style="font-size:12px; color:#aaa; margin-left:8px;">Mag:</span>
-            <button class="fine-btn" onclick="step('h', -0.1)">-</button>
-            <input type="number" id="m-h" class="m-input" step="0.1" placeholder="mm">
-            <button class="fine-btn" onclick="step('h', 0.1)">+</button>
-            <button onclick="setManual()" style="background:var(--accent); border:none; padding:10px 15px; border-radius:6px; font-weight:bold; margin-left:8px; color:#000;">OK</button>
-        </div>
-        <button onclick="clearMemory()" style="background:none; border:none; color:#555; font-size:11px; margin-top:5px;">Készülékváltás / Főmenü</button>
+        <button class="fine-btn" onclick="step('w', -0.1)">-</button>
+        <input type="number" id="m-w" class="m-input" placeholder="W">
+        <button class="fine-btn" onclick="step('w', 0.1)">+</button>
+        <span style="width:10px"></span>
+        <button class="fine-btn" onclick="step('h', -0.1)">-</button>
+        <input type="number" id="m-h" class="m-input" placeholder="H">
+        <button class="fine-btn" onclick="step('h', 0.1)">+</button>
+        <button onclick="setManual()" style="background:var(--accent); border:none; padding:6px 10px; border-radius:4px; font-weight:bold; margin-left:5px">OK</button>
+        <button onclick="clearMemory()" style="background:none; border:none; color:#555; font-size:10px; margin-left:5px">RESET</button>
     </div>
 </div>
 
@@ -123,15 +111,14 @@
             document.getElementById('saved-name').innerText = dev.name;
             document.getElementById('saved-ppi').innerText = dev.ppi + " PPI";
             document.getElementById('saved-device-btn').style.display = 'block';
-            document.getElementById('reset-btn').style.display = 'block';
             document.getElementById('new-device-form').style.display = 'none';
         }
     };
 
     function saveAndStart() {
-        const name = document.getElementById('devName').value || "Saját Eszköz";
+        const name = document.getElementById('devName').value || "Eszköz";
         const ppi = document.getElementById('ppiInput').value;
-        if (!ppi) return alert("PPI megadása szükséges!");
+        if (!ppi) return;
         localStorage.setItem('elite_ruler_dev', JSON.stringify({name, ppi}));
         startApp(ppi);
     }
@@ -151,8 +138,6 @@
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
-        
-        // AGRESSZÍV GÖRDÜLÉS TILTÁS
         document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
     }
 
@@ -162,42 +147,35 @@
 
     function updateGuides(e) {
         gv.style.display = 'block'; gh.style.display = 'block';
-        gv.style.left = e.clientX + 'px';
-        gh.style.top = e.clientY + 'px';
+        gv.style.left = e.clientX + 'px'; gh.style.top = e.clientY + 'px';
     }
 
-    function hideGuides() { gv.style.display = 'none'; gh.style.display = 'none'; }
-
-    // Eseménykezelők
     document.getElementById('move-handle').addEventListener('pointerdown', (e) => {
         activeAction = 'move'; startX = e.clientX; startY = e.clientY;
         startLeft = box.offsetLeft; startTop = box.offsetTop;
         e.target.setPointerCapture(e.pointerId);
-        e.preventDefault();
     });
 
     document.getElementById('resize-handle').addEventListener('pointerdown', (e) => {
         activeAction = 'resize'; startX = e.clientX; startY = e.clientY;
         startW = box.offsetWidth; startH = box.offsetHeight;
         e.target.setPointerCapture(e.pointerId);
-        e.preventDefault();
     });
 
     window.addEventListener('pointermove', (e) => {
         if (!activeAction) return;
-        e.preventDefault();
         updateGuides(e);
         if (activeAction === 'move') {
             box.style.left = (startLeft + (e.clientX - startX)) + "px";
             box.style.top = (startTop + (e.clientY - startY)) + "px";
         } else {
-            box.style.width = Math.max(20, startW + (e.clientX - startX)) + "px";
-            box.style.height = Math.max(20, startH + (e.clientY - startY)) + "px";
+            box.style.width = Math.max(10, startW + (e.clientX - startX)) + "px";
+            box.style.height = Math.max(10, startH + (e.clientY - startY)) + "px";
         }
         updateLabel();
-    }, { passive: false });
+    });
 
-    window.addEventListener('pointerup', () => { activeAction = null; hideGuides(); });
+    window.addEventListener('pointerup', () => { activeAction = null; gv.style.display = 'none'; gh.style.display = 'none'; });
 
     function updateLabel() {
         document.getElementById('label-w').innerText = (box.offsetWidth / ppmm).toFixed(1) + " mm";
