@@ -3,68 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite Méretező</title>
+    <title>Univerzális Méretező</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; touch-action: none; }
         
-        /* Teljes kijelzős gomb */
-        #fs-btn { position: fixed; top: 10px; right: 10px; z-index: 100; padding: 10px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; }
-
-        /* Vonalkázás */
-        .ruler { position: relative; height: 100vh; width: 100vw; border-left: 2px solid var(--accent); }
-        .mm-mark { position: absolute; left: 0; height: 1px; background: #555; width: 20px; }
-        .cm-mark { position: absolute; left: 0; height: 2px; background: var(--accent); width: 40px; }
-        .cm-text { position: absolute; left: 45px; font-size: 12px; color: var(--accent); transform: translateY(-50%); }
-
-        /* Eszközválasztó */
-        #setup { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a1a; padding: 15px; border-radius: 15px; text-align: center; width: 80%; }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 10px; width: 80%; margin: 10px 0; font-size: 16px; text-align: center; }
+        button { background: var(--accent); color: #000; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        
+        .ruler { position: relative; height: 100vh; width: 100vw; display: none; }
+        .cm-mark { position: absolute; left: 0; height: 2px; background: var(--accent); width: 50px; }
+        .mm-mark { position: absolute; left: 0; height: 1px; background: #444; width: 25px; }
+        .cm-text { position: absolute; left: 60px; font-size: 14px; color: var(--accent); transform: translateY(-50%); }
+        .info { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #444; }
     </style>
 </head>
 <body>
 
-<button id="fs-btn" onclick="toggleFS()">TELJES KÉPERNYŐ</button>
-
-<div id="setup">
-    <p>Válassz eszközt a kalibráláshoz:</p>
-    <button onclick="setDevice(19.45)">Note 20 Ultra</button>
-    <button onclick="setDevice(9.57)">Tab S7 FE</button>
+<div id="overlay">
+    <h2>Méretező Kalibráció</h2>
+    <p>Írd be a készülék <strong>PPI</strong> értékét:<br>
+    <small>(Tab S7 FE: 243 | Note 20 Ultra: 496)</small></p>
+    <input type="number" id="ppiInput" placeholder="Például: 243" inputmode="numeric">
+    <button onclick="startRuler()">INDÍTÁS (TELJES KÉPERNYŐ)</button>
 </div>
 
 <div id="ruler" class="ruler"></div>
+<div class="info" id="devInfo"></div>
 
 <script>
-    function toggleFS() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-            document.getElementById('fs-btn').style.display = 'none';
-        }
+    function startRuler() {
+        const ppi = document.getElementById('ppiInput').value;
+        if (!ppi) { alert("Kérlek írd be a PPI-t!"); return; }
+
+        // Teljes képernyő kérése
+        const doc = document.documentElement;
+        if (doc.requestFullscreen) doc.requestFullscreen();
+        else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+
+        // Számítás: 1 inch = 25.4 mm. Pixels per mm = PPI / 25.4
+        const ppmm = ppi / 25.4;
+        drawRuler(ppmm);
+
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('ruler').style.display = 'block';
+        document.getElementById('devInfo').innerText = "PPI: " + ppi;
     }
 
-    function setDevice(ppmm) {
-        const ruler = document.getElementById('ruler');
-        const setup = document.getElementById('setup');
-        ruler.innerHTML = '';
-        setup.style.display = 'none';
-
-        // Legyártjuk a mm/cm rovátkákat
-        for (let i = 0; i <= 500; i++) {
-            const div = document.createElement('div');
-            const pos = i * ppmm; // Pixel pozíció kiszámítása
+    function drawRuler(ppmm) {
+        const container = document.getElementById('ruler');
+        container.innerHTML = '';
+        
+        // 100 cm hosszig rajzolunk (vagy amíg a képernyő tart)
+        for (let i = 0; i <= 1000; i++) {
+            const pos = i * ppmm;
+            const mark = document.createElement('div');
             
             if (i % 10 === 0) {
-                div.className = 'cm-mark';
+                mark.className = 'cm-mark';
                 const text = document.createElement('span');
                 text.className = 'cm-text';
-                text.innerText = (i / 10) + ' cm';
-                text.style.top = pos + 'px';
-                ruler.appendChild(text);
+                text.innerText = (i / 10) + " cm";
+                text.style.top = pos + "px";
+                container.appendChild(text);
+            } else if (i % 5 === 0) {
+                mark.className = 'mm-mark';
+                mark.style.width = "35px";
+                mark.style.background = "#888";
             } else {
-                div.className = 'mm-mark';
+                mark.className = 'mm-mark';
             }
             
-            div.style.top = pos + 'px';
-            ruler.appendChild(div);
+            mark.style.top = pos + "px";
+            container.appendChild(mark);
         }
     }
 </script>
