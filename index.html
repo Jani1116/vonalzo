@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Elite Méretező</title>
+    <style>
+        :root { --accent: #30d158; --bg: #000; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; touch-action: none; }
+        
+        /* Teljes kijelzős gomb */
+        #fs-btn { position: fixed; top: 10px; right: 10px; z-index: 100; padding: 10px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; }
+
+        /* Vonalkázás */
+        .ruler { position: relative; height: 100vh; width: 100vw; border-left: 2px solid var(--accent); }
+        .mm-mark { position: absolute; left: 0; height: 1px; background: #555; width: 20px; }
+        .cm-mark { position: absolute; left: 0; height: 2px; background: var(--accent); width: 40px; }
+        .cm-text { position: absolute; left: 45px; font-size: 12px; color: var(--accent); transform: translateY(-50%); }
+
+        /* Eszközválasztó */
+        #setup { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a1a; padding: 15px; border-radius: 15px; text-align: center; width: 80%; }
+    </style>
+</head>
+<body>
+
+<button id="fs-btn" onclick="toggleFS()">TELJES KÉPERNYŐ</button>
+
+<div id="setup">
+    <p>Válassz eszközt a kalibráláshoz:</p>
+    <button onclick="setDevice(19.45)">Note 20 Ultra</button>
+    <button onclick="setDevice(9.57)">Tab S7 FE</button>
+</div>
+
+<div id="ruler" class="ruler"></div>
+
+<script>
+    function toggleFS() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            document.getElementById('fs-btn').style.display = 'none';
+        }
+    }
+
+    function setDevice(ppmm) {
+        const ruler = document.getElementById('ruler');
+        const setup = document.getElementById('setup');
+        ruler.innerHTML = '';
+        setup.style.display = 'none';
+
+        // Legyártjuk a mm/cm rovátkákat
+        for (let i = 0; i <= 500; i++) {
+            const div = document.createElement('div');
+            const pos = i * ppmm; // Pixel pozíció kiszámítása
+            
+            if (i % 10 === 0) {
+                div.className = 'cm-mark';
+                const text = document.createElement('span');
+                text.className = 'cm-text';
+                text.innerText = (i / 10) + ' cm';
+                text.style.top = pos + 'px';
+                ruler.appendChild(text);
+            } else {
+                div.className = 'mm-mark';
+            }
+            
+            div.style.top = pos + 'px';
+            ruler.appendChild(div);
+        }
+    }
+</script>
+</body>
+</html>
