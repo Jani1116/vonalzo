@@ -3,51 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite Precíziós Méretező</title>
+    <title>Elite Precíziós Méretező v2</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
-        body { 
-            background: var(--bg); color: #fff; font-family: sans-serif; 
-            margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%;
-            touch-action: none; -webkit-user-select: none;
+        
+        /* Ez tiltja le a lefelé húzós frissítést */
+        html, body { 
+            overscroll-behavior: none; 
+            overflow: hidden; 
+            position: fixed; 
+            width: 100%; 
+            height: 100%;
+            margin: 0; padding: 0;
+            background: var(--bg); color: #fff; font-family: sans-serif;
+            touch-action: none;
         }
         
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 200px; margin: 10px 0; font-size: 16px; text-align: center; }
+        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 180px; margin: 10px 0; font-size: 16px; text-align: center; }
         
-        #canvas { display: none; width: 100vw; height: 100vh; position: relative; background: radial-gradient(circle, #111 1px, transparent 1px); background-size: 20px 20px; }
+        #canvas { display: none; width: 100vw; height: 100vh; position: relative; }
 
-        /* A mérőkeret */
         #box { 
             position: absolute; top: 150px; left: 150px; 
             width: 150px; height: 100px;
             border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.05);
-            box-sizing: border-box; touch-action: none;
+            box-sizing: border-box;
         }
 
-        /* Mozgató gomb (Bal fent) */
+        /* Gombok */
         #move-handle {
-            position: absolute; top: -15px; left: -15px;
-            width: 34px; height: 34px; background: #fff;
+            position: absolute; top: -18px; left: -18px;
+            width: 36px; height: 36px; background: #fff;
             border-radius: 50%; border: 4px solid #333; cursor: move; z-index: 10;
         }
 
-        /* Méretező gomb (Jobb lent) */
         #resize-handle { 
-            position: absolute; bottom: -15px; right: -15px; 
-            width: 34px; height: 34px; background: var(--accent); 
+            position: absolute; bottom: -18px; right: -18px; 
+            width: 36px; height: 36px; background: var(--accent); 
             border-radius: 50%; border: 4px solid #000; cursor: nwse-resize; z-index: 10;
         }
 
-        #label { 
-            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-            font-size: 16px; color: var(--accent); font-weight: bold; white-space: nowrap;
-            background: #000; padding: 2px 8px; border-radius: 4px;
+        /* Érték kijelzők az éleken */
+        .label-w { 
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            font-size: 14px; color: var(--accent); font-weight: bold; background: #000; padding: 0 5px;
+        }
+
+        .label-h { 
+            position: absolute; left: -60px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+            font-size: 14px; color: var(--accent); font-weight: bold; width: 100px; text-align: center;
         }
 
         #controls {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 10px; background: rgba(20,20,20,0.9); padding: 15px; border-radius: 15px; border: 1px solid #333;
+            display: flex; gap: 8px; background: rgba(20,20,20,0.95); padding: 12px; border-radius: 12px; border: 1px solid #333;
         }
     </style>
 </head>
@@ -62,20 +72,21 @@
 <div id="canvas">
     <div id="box">
         <div id="move-handle"></div>
-        <div id="label">0 x 0 mm</div>
+        <div id="label-w" class="label-w">0 mm</div>
+        <div id="label-h" class="label-h">0 mm</div>
         <div id="resize-handle"></div>
     </div>
 
     <div id="controls">
-        <input type="number" id="m-w" style="width:70px" placeholder="Szél. mm">
-        <input type="number" id="m-h" style="width:70px" placeholder="Mag. mm">
-        <button onclick="setManual()" style="background:#fff; border:none; padding:10px; border-radius:5px; font-weight:bold;">OK</button>
+        <input type="number" id="m-w" style="width:60px" placeholder="W mm">
+        <input type="number" id="m-h" style="width:60px" placeholder="H mm">
+        <button onclick="setManual()" style="background:#fff; border:none; padding:10px 15px; border-radius:5px; font-weight:bold;">BEÁLLÍT</button>
     </div>
 </div>
 
 <script>
     let ppmm = 1;
-    let activeAction = null; // 'move' vagy 'resize'
+    let activeAction = null;
     let startX, startY, startW, startH, startLeft, startTop;
 
     function initApp() {
@@ -89,22 +100,18 @@
     const moveH = document.getElementById('move-handle');
     const resizeH = document.getElementById('resize-handle');
 
-    // Mozgatás kezdete
     moveH.addEventListener('pointerdown', (e) => {
         activeAction = 'move';
         startX = e.clientX; startY = e.clientY;
         startLeft = box.offsetLeft; startTop = box.offsetTop;
         moveH.setPointerCapture(e.pointerId);
-        e.preventDefault();
     });
 
-    // Méretezés kezdete
     resizeH.addEventListener('pointerdown', (e) => {
         activeAction = 'resize';
         startX = e.clientX; startY = e.clientY;
         startW = box.offsetWidth; startH = box.offsetHeight;
         resizeH.setPointerCapture(e.pointerId);
-        e.preventDefault();
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -117,8 +124,8 @@
         else if (activeAction === 'resize') {
             let newW = startW + (e.clientX - startX);
             let newH = startH + (e.clientY - startY);
-            if (newW > 10) box.style.width = newW + "px";
-            if (newH > 10) box.style.height = newH + "px";
+            if (newW > 15) box.style.width = newW + "px";
+            if (newH > 15) box.style.height = newH + "px";
         }
         updateLabel();
     });
@@ -128,7 +135,8 @@
     function updateLabel() {
         const w = (box.offsetWidth / ppmm).toFixed(1);
         const h = (box.offsetHeight / ppmm).toFixed(1);
-        document.getElementById('label').innerText = `${w} mm × ${h} mm`;
+        document.getElementById('label-w').innerText = `${w} mm`;
+        document.getElementById('label-h').innerText = `${h} mm`;
     }
 
     function setManual() {
@@ -139,8 +147,8 @@
         updateLabel();
     }
 
-    // Frissítés gátlása (visszahúzás ellen)
-    window.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
+    // Blokkolunk minden alapértelmezett böngésző-interakciót a kijelzőn
+    document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
 </script>
 </body>
 </html>
