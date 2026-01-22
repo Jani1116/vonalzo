@@ -2,81 +2,75 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite Méretező v3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Elite Méretező PRO</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
         
-        /* Drasztikus tiltás a frissítés ellen */
+        /* A legdurvább tiltás minden irányú görgetésre */
         html, body { 
-            overscroll-behavior-y: contain;
-            overscroll-behavior: none;
-            overflow: hidden;
+            overscroll-behavior: none !important;
+            overflow: hidden !important;
             position: fixed;
-            width: 100%; height: 100%;
+            width: 100vw; height: 100vh;
             margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif;
-            touch-action: none;
+            touch-action: none !important;
         }
 
         #app-wrapper {
-            position: absolute; inset: 0;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             width: 100%; height: 100%;
-            overflow: hidden;
-            touch-action: none;
+            display: flex; flex-direction: column;
         }
         
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 150px; margin: 10px; text-align: center; }
+        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 120px; margin: 10px; text-align: center; font-size: 18px; }
         
-        #canvas { display: none; width: 100%; height: 100%; position: relative; }
+        #canvas { display: none; flex: 1; position: relative; width: 100%; height: 100%; }
 
         #box { 
-            position: absolute; top: 150px; left: 150px; 
+            position: absolute; top: 100px; left: 100px; 
             width: 150px; height: 100px;
-            border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.05);
+            border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.1);
             box-sizing: border-box;
         }
 
         #move-handle {
-            position: absolute; top: -18px; left: -18px;
-            width: 36px; height: 36px; background: #fff;
-            border-radius: 50%; border: 4px solid #333; z-index: 10;
+            position: absolute; top: -20px; left: -20px;
+            width: 40px; height: 40px; background: #fff;
+            border-radius: 50%; border: 5px solid #333; z-index: 20;
         }
 
         #resize-handle { 
-            position: absolute; bottom: -18px; right: -18px; 
-            width: 36px; height: 36px; background: var(--accent); 
-            border-radius: 50%; border: 4px solid #000; z-index: 10;
+            position: absolute; bottom: -20px; right: -20px; 
+            width: 40px; height: 40px; background: var(--accent); 
+            border-radius: 50%; border: 5px solid #000; z-index: 20;
         }
 
-        .label-w { 
-            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
-            font-size: 14px; color: var(--accent); font-weight: bold; background: #000; padding: 0 5px;
-        }
-
-        .label-h { 
-            position: absolute; left: -65px; top: 50%; transform: translateY(-50%) rotate(-90deg);
-            font-size: 14px; color: var(--accent); font-weight: bold; width: 120px; text-align: center;
-        }
+        .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: #000; padding: 0 5px; white-space: nowrap; }
+        .label-h { position: absolute; left: -65px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 120px; text-align: center; }
 
         #controls {
-            position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 5px; background: rgba(30,30,30,0.95); padding: 8px; border-radius: 10px; border: 1px solid #444; align-items: center;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100;
         }
         
-        .m-input { background: #000; border: 1px solid #666; color: #fff; padding: 6px; border-radius: 4px; width: 45px; font-size: 13px; text-align: center; }
-        .m-btn { background: var(--accent); border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .m-label { font-size: 11px; color: #aaa; margin-left: 3px; }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 50px; font-size: 14px; text-align: center; }
+        .m-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+        .m-label { font-size: 11px; color: #888; margin-left: 2px; }
     </style>
 </head>
 <body>
 
 <div id="app-wrapper">
     <div id="overlay">
-        <h2 style="color:var(--accent)">Kalibráció (PPI)</h2>
+        <h2 style="color:var(--accent); margin-bottom:5px;">PPI Beállítás</h2>
+        <p style="font-size:12px; color:#666; margin:0;">Tab S7 FE: 243 | Note 20: 496</p>
         <input type="number" id="ppiInput" class="setup-input" value="243">
-        <button onclick="initApp()" style="background:var(--accent); border:none; padding:12px 30px; border-radius:8px; font-weight:bold;">INDÍTÁS</button>
+        <button onclick="initApp()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; font-size:16px;">INDÍTÁS</button>
     </div>
 
     <div id="canvas">
@@ -92,7 +86,7 @@
             <input type="number" id="m-w" class="m-input" placeholder="mm">
             <span class="m-label">Mag:</span>
             <input type="number" id="m-h" class="m-input" placeholder="mm">
-            <button onclick="setManual()" class="m-btn">BEÁLLÍT</button>
+            <button onclick="setManual()" class="m-btn">OK</button>
         </div>
     </div>
 </div>
@@ -107,12 +101,18 @@
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
+        
+        // Próbáljuk meg kényszeríteni a Fullscreent méréskor
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
     }
 
     const box = document.getElementById('box');
     const moveH = document.getElementById('move-handle');
     const resizeH = document.getElementById('resize-handle');
 
+    // Eseménykezelők pointer eseményekkel (S Pen és ujj támogatás)
     moveH.addEventListener('pointerdown', (e) => {
         activeAction = 'move';
         startX = e.clientX; startY = e.clientY;
@@ -131,7 +131,7 @@
 
     window.addEventListener('pointermove', (e) => {
         if (!activeAction) return;
-        e.preventDefault();
+        e.preventDefault(); // Ez blokkolja a görgetést mozgás közben
 
         if (activeAction === 'move') {
             box.style.left = (startLeft + (e.clientX - startX)) + "px";
@@ -163,8 +163,8 @@
         updateLabel();
     }
 
-    // Minden alapértelmezett esemény tiltása az egész wrapperen
-    document.getElementById('app-wrapper').addEventListener('touchmove', function(e) {
+    // A végső védelem: minden touch eseményt megállítunk, ami nem a gombokon történik
+    window.addEventListener('touchmove', (e) => {
         e.preventDefault();
     }, { passive: false });
 </script>
