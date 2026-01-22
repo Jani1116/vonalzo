@@ -3,61 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Méretező PRO v7</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Elite Méretező PRO v7.1</title>
     <style>
+        /* ALAP TÉMA (Sötét) */
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         
-        /* Témák javítva: színek és kontraszt */
-        body.theme-beton { --bg: #333333; --accent: #00e5ff; --box-bg: rgba(0,229,255,0.15); }
-        body.theme-tegla { --bg: #5d251a; --accent: #ff9800; --box-bg: rgba(255,152,0,0.15); }
-        body.theme-fa { --bg: #2e1a0a; --accent: #d7ccc8; --box-bg: rgba(215,204,200,0.15); }
+        /* TÉMÁK - Kényszerített felülírás */
+        body.theme-beton { --bg: #333 !important; --accent: #00e5ff !important; --box-bg: rgba(0,229,255,0.15) !important; }
+        body.theme-tegla { --bg: #5d251a !important; --accent: #ff9800 !important; --box-bg: rgba(255,152,0,0.15) !important; }
+        body.theme-fa { --bg: #2e1a0a !important; --accent: #d7ccc8 !important; --box-bg: rgba(215,204,200,0.15) !important; }
 
         html, body { 
             overscroll-behavior: none !important;
             overflow: hidden !important;
-            position: fixed; width: 100vw; height: 100vh;
+            position: fixed;
+            width: 100vw; height: 100vh;
             margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif;
             touch-action: none !important;
         }
 
-        #barrier { position: fixed; top: 0; left: 0; width: 100%; height: 6px; z-index: 10000; background: transparent; }
+        #barrier { position: fixed; top: 0; left: 0; width: 100%; height: 8px; z-index: 10000; background: transparent; }
 
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 18px; }
+        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 150px; margin: 10px; text-align: center; font-size: 18px; }
         
-        /* Belépő gombok */
-        #saved-btn { 
-            background: #111; border: 2px solid var(--accent); color: #fff; 
-            padding: 25px; border-radius: 15px; width: 260px; margin-bottom: 20px; cursor: pointer; text-align: center;
-        }
-        .fix-btn { background: none; border: 1px solid #444; color: #888; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 260px; margin-bottom: 20px; text-align: center; }
+        .fix-btn { background: none; border: 1px solid #444; color: #888; padding: 8px 15px; border-radius: 8px; font-size: 14px; }
 
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
 
-        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; }
-        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; }
+        /* Segédvonalak */
+        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.2); display: none; pointer-events: none; }
+        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.2); display: none; pointer-events: none; }
 
         #box { position: absolute; top: 100px; left: 100px; width: 150px; height: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
 
-        /* Feleakkora gombok */
         .handle { width: 20px; height: 20px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
         #move-handle { top: -10px; left: -10px; background: #fff; }
         #resize-handle { bottom: -10px; right: -10px; background: var(--accent); }
 
         .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: var(--bg); padding: 0 5px; white-space: nowrap; }
-        .label-h { position: absolute; left: -70px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 120px; text-align: center; background: var(--bg); }
+        .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 130px; text-align: center; background: var(--bg); }
 
         #controls {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100;
         }
         
-        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 50px; font-size: 14px; text-align: center; }
-        .f-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 45px; font-size: 14px; text-align: center; }
+        .f-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; }
         .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 12px; color: #000; }
         
-        #theme-btn { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.5); border: 1px solid #555; color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 200; }
+        #theme-btn { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6); border: 1px solid #666; color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 200; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -74,15 +74,14 @@
     </div>
 
     <div id="register-screen" style="text-align:center;">
-        <h2 style="color:var(--accent); margin-bottom:15px;">Eszköz rögzítése</h2>
         <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve">
         <input type="number" id="ppiInput" class="setup-input" placeholder="PPI kód">
-        <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; font-size:16px; color:#000; margin-top:10px;">MENTÉS</button>
+        <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; font-size:16px; color:#000;">MENTÉS</button>
     </div>
 </div>
 
 <div id="canvas">
-    <button id="theme-btn" onclick="nextTheme()">TÉMA VÁLTÁS</button>
+    <button id="theme-btn" onclick="nextTheme()">TÉMA</button>
     <div id="gv" class="guide-v"></div>
     <div id="gh" class="guide-h"></div>
     
@@ -96,16 +95,13 @@
     <div id="controls">
         <span style="font-size:11px; color:#888;">Szél:</span>
         <button class="f-btn" onclick="adj('w',-0.1)">-</button>
-        <input type="number" id="m-w" class="m-input" placeholder="mm">
+        <input type="number" id="m-w" class="m-input">
         <button class="f-btn" onclick="adj('w',0.1)">+</button>
-        
         <span style="width:10px"></span>
-        
         <span style="font-size:11px; color:#888;">Hosz:</span>
         <button class="f-btn" onclick="adj('h',-0.1)">-</button>
-        <input type="number" id="m-h" class="m-input" placeholder="mm">
+        <input type="number" id="m-h" class="m-input">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
-        
         <button onclick="setManual()" class="ok-btn">OK</button>
     </div>
 </div>
@@ -136,9 +132,9 @@
     function saveAndStart() {
         const n = document.getElementById('devName').value;
         const p = document.getElementById('ppiInput').value;
-        if (!n || !p) return alert("Minden mezőt tölts ki!");
+        if (!n || !p) return;
         localStorage.setItem('elite_r_dev', JSON.stringify({name:n, ppi:p}));
-        location.reload(); // Frissítés, hogy a mentett állapotba kerüljön
+        location.reload();
     }
 
     function initApp() {
@@ -147,6 +143,11 @@
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
+        
+        // TE KÓDOD: Fullscreen kényszerítés a frissítés ellen
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
     }
 
     const box = document.getElementById('box');
@@ -174,8 +175,8 @@
             box.style.left = (startLeft + (e.clientX - startX)) + "px";
             box.style.top = (startTop + (e.clientY - startY)) + "px";
         } else {
-            box.style.width = Math.max(20, startW + (e.clientX - startX)) + "px";
-            box.style.height = Math.max(20, startH + (e.clientY - startY)) + "px";
+            box.style.width = Math.max(10, startW + (e.clientX - startX)) + "px";
+            box.style.height = Math.max(10, startH + (e.clientY - startY)) + "px";
         }
         updateLabel();
     }, { passive: false });
@@ -209,6 +210,7 @@
         }
     }
 
+    // TE KÓDOD: Szigorú touch tiltás
     window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
 </script>
 </body>
