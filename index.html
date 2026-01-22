@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v8 - Kalibrált</title>
+    <title>Elite Méretező PRO v8.1</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -15,12 +15,20 @@
         #barrier { position: fixed; top: 0; left: 0; width: 100%; height: 8px; z-index: 10000; background: transparent; }
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
+        
+        /* ÚJ KALIBRÁCIÓS SZERKEZET */
+        #cal-container { position: relative; margin: 40px 0; height: 60px; display: flex; align-items: center; }
+        .cal-v-line { width: 2px; height: 50px; background: #fff; position: relative; }
+        #cal-main-line { height: 2px; background: #fff; width: 200px; min-width: 50px; }
+        #cal-handle { 
+            width: 40px; height: 40px; background: var(--accent); 
+            border-radius: 50%; position: absolute; right: -20px; top: 50%; 
+            transform: translateY(-50%); border: 4px solid #000; z-index: 10;
+        }
+
+        #login-screen { text-align: center; }
         #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; }
         
-        /* Kalibrációs rész */
-        #cal-line { width: 200px; height: 4px; background: #fff; margin: 20px 0; position: relative; }
-        .cal-handle { width: 30px; height: 30px; background: var(--accent); border-radius: 50%; position: absolute; top: -13px; right: -15px; }
-
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
         .handle { width: 20px; height: 20px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
@@ -40,21 +48,26 @@
 <div id="barrier"></div>
 
 <div id="overlay">
-    <div id="login-screen" style="display:none; text-align:center;">
+    <div id="login-screen" style="display:none;">
         <div id="saved-btn" onclick="initApp()">
             <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
             <div id="s-ppi" style="color:var(--accent); font-size:16px; margin-top:5px;"></div>
         </div>
-        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px;">Javítás / Új kalibrálás</button>
+        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px; border-radius:8px;">Javítás / Új kalibrálás</button>
     </div>
 
     <div id="register-screen" style="text-align:center;">
-        <h3 style="color:var(--accent)">Kalibráció</h3>
-        <p style="font-size:12px; color:#aaa;">Állítsd a vonalat egy ismert tárgyhoz!</p>
-        <div id="cal-line"><div class="cal-handle" id="cal-h"></div></div>
+        <h3 style="color:var(--accent)">Kalibrálás</h3>
+        <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Illeszd a vonalakat a tárgy két széléhez!</p>
+        
+        <div id="cal-container">
+            <div class="cal-v-line"></div> <div id="cal-main-line"></div>  <div class="cal-v-line">       <div id="cal-handle"></div>
+            </div>
+        </div>
+
         <input type="number" id="calRef" class="setup-input" placeholder="Tárgy hossza (mm)" value="85.6">
         <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Tab S7 FE">
-        <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000;">KALIBRÁCIÓ MENTÉSE</button>
+        <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000; margin-top:10px;">MENTÉS</button>
     </div>
 </div>
 
@@ -76,7 +89,7 @@
         <input type="number" id="m-h" class="m-input">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
         <button onclick="setManual()" class="ok-btn">OK</button>
-        <button onclick="showRegister()" style="background:none; border:none; color:#555; font-size:10px; margin-left:10px;">JAVÍTÁS</button>
+        <button onclick="showRegister()" style="background:none; border:none; color:#555; font-size:10px; margin-left:10px;">RESET</button>
     </div>
 </div>
 
@@ -85,12 +98,14 @@
     let activeAction = null;
     let startX, startY, startW, startH, startLeft, startTop;
 
-    // Kalibrációs vonal mozgatása
-    const calLine = document.getElementById('cal-line');
-    const calH = document.getElementById('cal-h');
-    calH.addEventListener('pointerdown', (e) => {
+    const calMainLine = document.getElementById('cal-main-line');
+    const calHandle = document.getElementById('cal-handle');
+
+    calHandle.addEventListener('pointerdown', (e) => {
         activeAction = 'cal';
-        calH.setPointerCapture(e.pointerId);
+        startX = e.clientX;
+        startW = calMainLine.offsetWidth;
+        calHandle.setPointerCapture(e.pointerId);
     });
 
     window.onload = () => {
@@ -98,7 +113,7 @@
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
-            document.getElementById('s-ppi').innerText = "Kalibrált: " + d.ppi + " ppmm";
+            document.getElementById('s-ppi').innerText = "Kalibrált eszköz";
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('register-screen').style.display = 'none';
         }
@@ -112,11 +127,11 @@
     }
 
     function doCalibrate() {
-        const refMm = document.getElementById('calRef').value;
-        const linePx = calLine.offsetWidth;
+        const refMm = parseFloat(document.getElementById('calRef').value);
+        const linePx = calMainLine.offsetWidth;
         const calculatedPpmm = linePx / refMm;
         const name = document.getElementById('devName').value || "Eszköz";
-        localStorage.setItem('elite_r_dev', JSON.stringify({name: name, ppi: calculatedPpmm.toFixed(4)}));
+        localStorage.setItem('elite_r_dev', JSON.stringify({name: name, ppi: calculatedPpmm.toFixed(6)}));
         location.reload();
     }
 
@@ -129,7 +144,6 @@
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     }
 
-    // Alap működés
     const box = document.getElementById('box');
     const handleStart = (e, type) => {
         activeAction = type; startX = e.clientX; startY = e.clientY;
@@ -144,7 +158,8 @@
     window.addEventListener('pointermove', (e) => {
         if (!activeAction) return;
         if (activeAction === 'cal') {
-            calLine.style.width = Math.max(50, e.clientX - calLine.offsetLeft) + "px";
+            let newW = startW + (e.clientX - startX);
+            calMainLine.style.width = Math.max(20, newW) + "px";
         } else if (activeAction === 'move') {
             box.style.left = (startLeft + (e.clientX - startX)) + "px";
             box.style.top = (startTop + (e.clientY - startY)) + "px";
@@ -156,6 +171,7 @@
     });
 
     window.addEventListener('pointerup', () => { activeAction = null; });
+
     function updateLabel() {
         document.getElementById('label-w').innerText = (box.offsetWidth / ppmm).toFixed(1) + " mm";
         document.getElementById('label-h').innerText = (box.offsetHeight / ppmm).toFixed(1) + " mm";
