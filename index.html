@@ -4,60 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v7.1</title>
+    <title>Elite Méretező PRO v8 - Kalibrált</title>
     <style>
-        /* ALAP TÉMA (Sötét) */
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
-        
-        /* TÉMÁK - Kényszerített felülírás */
-        body.theme-beton { --bg: #333 !important; --accent: #00e5ff !important; --box-bg: rgba(0,229,255,0.15) !important; }
-        body.theme-tegla { --bg: #5d251a !important; --accent: #ff9800 !important; --box-bg: rgba(255,152,0,0.15) !important; }
-        body.theme-fa { --bg: #2e1a0a !important; --accent: #d7ccc8 !important; --box-bg: rgba(215,204,200,0.15) !important; }
-
         html, body { 
-            overscroll-behavior: none !important;
-            overflow: hidden !important;
-            position: fixed;
-            width: 100vw; height: 100vh;
-            margin: 0; padding: 0;
-            background: var(--bg); color: #fff; font-family: sans-serif;
-            touch-action: none !important;
+            overscroll-behavior: none !important; overflow: hidden !important;
+            position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
+            background: var(--bg); color: #fff; font-family: sans-serif; touch-action: none !important;
         }
-
         #barrier { position: fixed; top: 0; left: 0; width: 100%; height: 8px; z-index: 10000; background: transparent; }
-
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 150px; margin: 10px; text-align: center; font-size: 18px; }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
+        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; }
         
-        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 260px; margin-bottom: 20px; text-align: center; }
-        .fix-btn { background: none; border: 1px solid #444; color: #888; padding: 8px 15px; border-radius: 8px; font-size: 14px; }
+        /* Kalibrációs rész */
+        #cal-line { width: 200px; height: 4px; background: #fff; margin: 20px 0; position: relative; }
+        .cal-handle { width: 30px; height: 30px; background: var(--accent); border-radius: 50%; position: absolute; top: -13px; right: -15px; }
 
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
-
-        /* Segédvonalak */
-        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.2); display: none; pointer-events: none; }
-        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.2); display: none; pointer-events: none; }
-
-        #box { position: absolute; top: 100px; left: 100px; width: 150px; height: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
-
+        #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
         .handle { width: 20px; height: 20px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
         #move-handle { top: -10px; left: -10px; background: #fff; }
         #resize-handle { bottom: -10px; right: -10px; background: var(--accent); }
-
         .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: var(--bg); padding: 0 5px; white-space: nowrap; }
         .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 130px; text-align: center; background: var(--bg); }
-
-        #controls {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100;
-        }
         
-        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 45px; font-size: 14px; text-align: center; }
+        #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 45px; text-align: center; }
         .f-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; }
-        .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 12px; color: #000; }
-        
-        #theme-btn { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6); border: 1px solid #666; color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 200; }
+        .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; color: #000; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -68,30 +43,28 @@
     <div id="login-screen" style="display:none; text-align:center;">
         <div id="saved-btn" onclick="initApp()">
             <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
-            <div id="s-ppi" style="color:var(--accent); font-size:18px; margin-top:5px;"></div>
+            <div id="s-ppi" style="color:var(--accent); font-size:16px; margin-top:5px;"></div>
         </div>
-        <button class="fix-btn" onclick="showRegister()">Javítás</button>
+        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px;">Javítás / Új kalibrálás</button>
     </div>
 
     <div id="register-screen" style="text-align:center;">
-        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve">
-        <input type="number" id="ppiInput" class="setup-input" placeholder="PPI kód">
-        <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; font-size:16px; color:#000;">MENTÉS</button>
+        <h3 style="color:var(--accent)">Kalibráció</h3>
+        <p style="font-size:12px; color:#aaa;">Állítsd a vonalat egy ismert tárgyhoz!</p>
+        <div id="cal-line"><div class="cal-handle" id="cal-h"></div></div>
+        <input type="number" id="calRef" class="setup-input" placeholder="Tárgy hossza (mm)" value="85.6">
+        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Tab S7 FE">
+        <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000;">KALIBRÁCIÓ MENTÉSE</button>
     </div>
 </div>
 
 <div id="canvas">
-    <button id="theme-btn" onclick="nextTheme()">TÉMA</button>
-    <div id="gv" class="guide-v"></div>
-    <div id="gh" class="guide-h"></div>
-    
-    <div id="box">
+    <div id="box" style="width:150px; height:100px;">
         <div id="move-handle" class="handle"></div>
         <div id="label-w" class="label-w">0 mm</div>
         <div id="label-h" class="label-h">0 mm</div>
         <div id="resize-handle" class="handle"></div>
     </div>
-
     <div id="controls">
         <span style="font-size:11px; color:#888;">Szél:</span>
         <button class="f-btn" onclick="adj('w',-0.1)">-</button>
@@ -103,6 +76,7 @@
         <input type="number" id="m-h" class="m-input">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
         <button onclick="setManual()" class="ok-btn">OK</button>
+        <button onclick="showRegister()" style="background:none; border:none; color:#555; font-size:10px; margin-left:10px;">JAVÍTÁS</button>
     </div>
 </div>
 
@@ -110,15 +84,21 @@
     let ppmm = 1;
     let activeAction = null;
     let startX, startY, startW, startH, startLeft, startTop;
-    const themes = ['', 'theme-beton', 'theme-tegla', 'theme-fa'];
-    let themeIdx = 0;
+
+    // Kalibrációs vonal mozgatása
+    const calLine = document.getElementById('cal-line');
+    const calH = document.getElementById('cal-h');
+    calH.addEventListener('pointerdown', (e) => {
+        activeAction = 'cal';
+        calH.setPointerCapture(e.pointerId);
+    });
 
     window.onload = () => {
         const saved = localStorage.getItem('elite_r_dev');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
-            document.getElementById('s-ppi').innerText = d.ppi;
+            document.getElementById('s-ppi').innerText = "Kalibrált: " + d.ppi + " ppmm";
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('register-screen').style.display = 'none';
         }
@@ -126,37 +106,33 @@
 
     function showRegister() {
         document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('canvas').style.display = 'none';
+        document.getElementById('overlay').style.display = 'flex';
         document.getElementById('register-screen').style.display = 'block';
     }
 
-    function saveAndStart() {
-        const n = document.getElementById('devName').value;
-        const p = document.getElementById('ppiInput').value;
-        if (!n || !p) return;
-        localStorage.setItem('elite_r_dev', JSON.stringify({name:n, ppi:p}));
+    function doCalibrate() {
+        const refMm = document.getElementById('calRef').value;
+        const linePx = calLine.offsetWidth;
+        const calculatedPpmm = linePx / refMm;
+        const name = document.getElementById('devName').value || "Eszköz";
+        localStorage.setItem('elite_r_dev', JSON.stringify({name: name, ppi: calculatedPpmm.toFixed(4)}));
         location.reload();
     }
 
     function initApp() {
         const saved = JSON.parse(localStorage.getItem('elite_r_dev'));
-        ppmm = saved.ppi / 25.4;
+        ppmm = parseFloat(saved.ppi);
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
-        
-        // TE KÓDOD: Fullscreen kényszerítés a frissítés ellen
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     }
 
+    // Alap működés
     const box = document.getElementById('box');
-    const gv = document.getElementById('gv');
-    const gh = document.getElementById('gh');
-
     const handleStart = (e, type) => {
-        activeAction = type;
-        startX = e.clientX; startY = e.clientY;
+        activeAction = type; startX = e.clientX; startY = e.clientY;
         startW = box.offsetWidth; startH = box.offsetHeight;
         startLeft = box.offsetLeft; startTop = box.offsetTop;
         e.target.setPointerCapture(e.pointerId);
@@ -167,33 +143,28 @@
 
     window.addEventListener('pointermove', (e) => {
         if (!activeAction) return;
-        e.preventDefault();
-        gv.style.display = gh.style.display = 'block';
-        gv.style.left = e.clientX + 'px'; gh.style.top = e.clientY + 'px';
-
-        if (activeAction === 'move') {
+        if (activeAction === 'cal') {
+            calLine.style.width = Math.max(50, e.clientX - calLine.offsetLeft) + "px";
+        } else if (activeAction === 'move') {
             box.style.left = (startLeft + (e.clientX - startX)) + "px";
             box.style.top = (startTop + (e.clientY - startY)) + "px";
-        } else {
-            box.style.width = Math.max(10, startW + (e.clientX - startX)) + "px";
-            box.style.height = Math.max(10, startH + (e.clientY - startY)) + "px";
+        } else if (activeAction === 'resize') {
+            box.style.width = Math.max(20, startW + (e.clientX - startX)) + "px";
+            box.style.height = Math.max(20, startH + (e.clientY - startY)) + "px";
         }
         updateLabel();
-    }, { passive: false });
+    });
 
-    window.addEventListener('pointerup', () => { activeAction = null; gv.style.display = gh.style.display = 'none'; });
-
+    window.addEventListener('pointerup', () => { activeAction = null; });
     function updateLabel() {
         document.getElementById('label-w').innerText = (box.offsetWidth / ppmm).toFixed(1) + " mm";
         document.getElementById('label-h').innerText = (box.offsetHeight / ppmm).toFixed(1) + " mm";
     }
-
     function adj(t, v) {
         if (t === 'w') box.style.width = (box.offsetWidth + (v * ppmm)) + "px";
         else box.style.height = (box.offsetHeight + (v * ppmm)) + "px";
         updateLabel();
     }
-
     function setManual() {
         const w = document.getElementById('m-w').value;
         const h = document.getElementById('m-h').value;
@@ -201,16 +172,6 @@
         if(h) box.style.height = (h * ppmm) + "px";
         updateLabel();
     }
-
-    function nextTheme() {
-        document.body.classList.remove(...themes);
-        themeIdx = (themeIdx + 1) % themes.length;
-        if (themes[themeIdx]) {
-            document.body.classList.add(themes[themeIdx]);
-        }
-    }
-
-    // TE KÓDOD: Szigorú touch tiltás
     window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
 </script>
 </body>
