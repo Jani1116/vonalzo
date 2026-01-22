@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v8.2</title>
+    <title>Elite Méretező PRO v8.3</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -16,13 +16,12 @@
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
         
-        /* FINOMÍTOTT KALIBRÁCIÓ */
-        #cal-container { position: relative; margin: 50px 0; height: 80px; display: flex; align-items: center; cursor: ew-resize; }
-        .cal-v-line { width: 2px; height: 60px; background: #fff; position: relative; }
-        #cal-main-line { height: 2px; background: #fff; width: 200px; min-width: 20px; }
-        /* A jobb oldali vonal maga a fogantyú, nincs rajta gomb */
-        #cal-right-handle { width: 40px; height: 80px; position: absolute; right: -20px; display: flex; align-items: center; justify-content: center; touch-action: none; }
-        #cal-right-handle::after { content: ''; width: 3px; height: 60px; background: var(--accent); }
+        /* KALIBRÁCIÓS FELÜLET */
+        #cal-area { position: relative; margin: 40px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
+        #cal-main-line { height: 2px; background: #fff; width: 200px; position: relative; }
+        .cal-v-left { position: absolute; left: 0; top: -30px; width: 2px; height: 60px; background: #fff; }
+        .cal-v-right { position: absolute; right: 0; top: -30px; width: 3px; height: 60px; background: var(--accent); }
+        #cal-handle { position: absolute; right: -25px; top: -40px; width: 50px; height: 80px; z-index: 50; touch-action: none; background: transparent; }
 
         #login-screen { text-align: center; }
         #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; }
@@ -56,10 +55,15 @@
 
     <div id="register-screen" style="text-align:center;">
         <h3 style="color:var(--accent)">Kalibrálás</h3>
-        <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Húzd a színes vonalat a tárgy széléhez!</p>
+        <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Húzd a zöld vonalat a tárgy széléhez!</p>
         
-        <div id="cal-container">
-            <div class="cal-v-line"></div> <div id="cal-main-line"></div>  <div id="cal-right-handle"></div> </div>
+        <div id="cal-area">
+            <div id="cal-main-line">
+                <div class="cal-v-left"></div>
+                <div class="cal-v-right"></div>
+                <div id="cal-handle"></div>
+            </div>
+        </div>
 
         <input type="number" id="calRef" class="setup-input" placeholder="Tárgy hossza (mm)" value="85.6">
         <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Tab S7 FE">
@@ -85,7 +89,7 @@
         <input type="number" id="m-h" class="m-input">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
         <button onclick="setManual()" class="ok-btn">OK</button>
-        </div>
+    </div>
 </div>
 
 <script>
@@ -93,10 +97,10 @@
     let activeAction = null;
     let startX, startW;
 
+    // KALIBRÁCIÓ JAVÍTVA
     const calMainLine = document.getElementById('cal-main-line');
-    const calHandle = document.getElementById('cal-right-handle');
+    const calHandle = document.getElementById('cal-handle');
 
-    // Kalibrációs vonal mozgatása
     calHandle.addEventListener('pointerdown', (e) => {
         activeAction = 'cal';
         startX = e.clientX;
@@ -139,7 +143,7 @@
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     }
 
-    // Doboz kezelése
+    // DOBOZ MOZGATÁS (A te kódod alapján)
     const box = document.getElementById('box');
     let bStartX, bStartY, bStartW, bStartH, bStartLeft, bStartTop;
 
@@ -155,9 +159,10 @@
 
     window.addEventListener('pointermove', (e) => {
         if (!activeAction) return;
+        
         if (activeAction === 'cal') {
-            let newW = startW + (e.clientX - startX);
-            calMainLine.style.width = Math.max(10, newW) + "px";
+            const dx = e.clientX - startX;
+            calMainLine.style.width = Math.max(20, startW + dx) + "px";
         } else if (activeAction === 'move') {
             box.style.left = (bStartLeft + (e.clientX - bStartX)) + "px";
             box.style.top = (bStartTop + (e.clientY - bStartY)) + "px";
