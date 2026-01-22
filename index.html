@@ -3,56 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO</title>
+    <title>Elite Méretező PRO v7</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         
-        /* Témák - csak színeket váltunk, a szerkezet marad */
-        body.theme-beton { --bg: #333; --accent: #00e5ff; --box-bg: rgba(0,229,255,0.15); }
+        /* Témák javítva: színek és kontraszt */
+        body.theme-beton { --bg: #333333; --accent: #00e5ff; --box-bg: rgba(0,229,255,0.15); }
         body.theme-tegla { --bg: #5d251a; --accent: #ff9800; --box-bg: rgba(255,152,0,0.15); }
         body.theme-fa { --bg: #2e1a0a; --accent: #d7ccc8; --box-bg: rgba(215,204,200,0.15); }
 
-        /* A TE KÓDODBÓL: Szigorú tiltások */
         html, body { 
             overscroll-behavior: none !important;
             overflow: hidden !important;
-            position: fixed;
-            width: 100vw; height: 100vh;
+            position: fixed; width: 100vw; height: 100vh;
             margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif;
             touch-action: none !important;
         }
 
-        /* LÁTHATATLAN FAL a legtetején (0.5mm) */
-        #barrier {
-            position: fixed; top: 0; left: 0; width: 100%; height: 6px;
-            z-index: 10000; background: transparent; pointer-events: all;
-        }
+        #barrier { position: fixed; top: 0; left: 0; width: 100%; height: 6px; z-index: 10000; background: transparent; }
 
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 140px; margin: 10px; text-align: center; font-size: 18px; }
+        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 18px; }
         
+        /* Belépő gombok */
         #saved-btn { 
             background: #111; border: 2px solid var(--accent); color: #fff; 
-            padding: 20px; border-radius: 12px; width: 240px; margin-bottom: 20px; cursor: pointer; text-align: center;
+            padding: 25px; border-radius: 15px; width: 260px; margin-bottom: 20px; cursor: pointer; text-align: center;
         }
+        .fix-btn { background: none; border: 1px solid #444; color: #888; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
 
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
 
-        /* Hajszálkereszt */
-        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.25); display: none; pointer-events: none; }
-        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.25); display: none; pointer-events: none; }
+        .guide-v { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; }
+        .guide-h { position: absolute; left: 0; height: 1px; width: 100%; background: rgba(255,255,255,0.3); display: none; pointer-events: none; }
 
-        #box { 
-            position: absolute; top: 100px; left: 100px; 
-            width: 150px; height: 100px;
-            border: 2px solid var(--accent); background: var(--box-bg);
-            box-sizing: border-box;
-        }
+        #box { position: absolute; top: 100px; left: 100px; width: 150px; height: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
 
-        /* FELEAKKORA GOMBOK (20px) */
+        /* Feleakkora gombok */
         .handle { width: 20px; height: 20px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
         #move-handle { top: -10px; left: -10px; background: #fff; }
         #resize-handle { bottom: -10px; right: -10px; background: var(--accent); }
@@ -77,18 +65,24 @@
 <div id="barrier"></div>
 
 <div id="overlay">
-    <div id="saved-btn" onclick="loadSaved()" style="display:none;">
-        <div id="s-name" style="font-weight:bold; font-size:18px;"></div>
-        <div id="s-ppi" style="color:var(--accent); font-size:16px;"></div>
+    <div id="login-screen" style="display:none; text-align:center;">
+        <div id="saved-btn" onclick="initApp()">
+            <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
+            <div id="s-ppi" style="color:var(--accent); font-size:18px; margin-top:5px;"></div>
+        </div>
+        <button class="fix-btn" onclick="showRegister()">Javítás</button>
     </div>
-    <h2 style="color:var(--accent); margin-bottom:5px;">PPI Beállítás</h2>
-    <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve">
-    <input type="number" id="ppiInput" class="setup-input" value="243">
-    <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; font-size:16px; color:#000;">INDÍTÁS</button>
+
+    <div id="register-screen" style="text-align:center;">
+        <h2 style="color:var(--accent); margin-bottom:15px;">Eszköz rögzítése</h2>
+        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve">
+        <input type="number" id="ppiInput" class="setup-input" placeholder="PPI kód">
+        <button onclick="saveAndStart()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; font-size:16px; color:#000; margin-top:10px;">MENTÉS</button>
+    </div>
 </div>
 
 <div id="canvas">
-    <button id="theme-btn" onclick="nextTheme()">TÉMA</button>
+    <button id="theme-btn" onclick="nextTheme()">TÉMA VÁLTÁS</button>
     <div id="gv" class="guide-v"></div>
     <div id="gh" class="guide-h"></div>
     
@@ -100,15 +94,19 @@
     </div>
 
     <div id="controls">
+        <span style="font-size:11px; color:#888;">Szél:</span>
         <button class="f-btn" onclick="adj('w',-0.1)">-</button>
-        <input type="number" id="m-w" class="m-input" placeholder="W">
+        <input type="number" id="m-w" class="m-input" placeholder="mm">
         <button class="f-btn" onclick="adj('w',0.1)">+</button>
+        
         <span style="width:10px"></span>
+        
+        <span style="font-size:11px; color:#888;">Hosz:</span>
         <button class="f-btn" onclick="adj('h',-0.1)">-</button>
-        <input type="number" id="m-h" class="m-input" placeholder="H">
+        <input type="number" id="m-h" class="m-input" placeholder="mm">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
+        
         <button onclick="setManual()" class="ok-btn">OK</button>
-        <button onclick="clearMem()" style="background:none; border:none; color:#555; font-size:10px; margin-left:10px;">RESET</button>
     </div>
 </div>
 
@@ -124,33 +122,31 @@
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
-            document.getElementById('s-ppi').innerText = d.ppi + " PPI";
-            document.getElementById('saved-btn').style.display = 'block';
-            document.getElementById('ppiInput').value = d.ppi;
-            document.getElementById('devName').value = d.name;
+            document.getElementById('s-ppi').innerText = d.ppi;
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('register-screen').style.display = 'none';
         }
     };
 
-    function saveAndStart() {
-        const n = document.getElementById('devName').value || "Eszköz";
-        const p = document.getElementById('ppiInput').value;
-        if (!p) return;
-        localStorage.setItem('elite_r_dev', JSON.stringify({name:n, ppi:p}));
-        initApp();
+    function showRegister() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('register-screen').style.display = 'block';
     }
 
-    function loadSaved() { initApp(); }
-    function clearMem() { localStorage.removeItem('elite_r_dev'); location.reload(); }
+    function saveAndStart() {
+        const n = document.getElementById('devName').value;
+        const p = document.getElementById('ppiInput').value;
+        if (!n || !p) return alert("Minden mezőt tölts ki!");
+        localStorage.setItem('elite_r_dev', JSON.stringify({name:n, ppi:p}));
+        location.reload(); // Frissítés, hogy a mentett állapotba kerüljön
+    }
 
     function initApp() {
-        ppmm = document.getElementById('ppiInput').value / 25.4;
+        const saved = JSON.parse(localStorage.getItem('elite_r_dev'));
+        ppmm = saved.ppi / 25.4;
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
-        
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
     }
 
     const box = document.getElementById('box');
@@ -163,7 +159,6 @@
         startW = box.offsetWidth; startH = box.offsetHeight;
         startLeft = box.offsetLeft; startTop = box.offsetTop;
         e.target.setPointerCapture(e.pointerId);
-        e.preventDefault();
     };
 
     document.getElementById('move-handle').addEventListener('pointerdown', (e) => handleStart(e, 'move'));
@@ -209,10 +204,11 @@
     function nextTheme() {
         document.body.classList.remove(...themes);
         themeIdx = (themeIdx + 1) % themes.length;
-        if (themes[themeIdx]) document.body.classList.add(themes[themeIdx]);
+        if (themes[themeIdx]) {
+            document.body.classList.add(themes[themeIdx]);
+        }
     }
 
-    // A TE KÓDOD VÉDELME: Minden görgetés tiltása
     window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
 </script>
 </body>
