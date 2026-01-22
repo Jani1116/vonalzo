@@ -3,130 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Elite Digitális Tolómérő</title>
+    <title>Elite Precíziós Méretező</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; touch-action: none; }
+        body { 
+            background: var(--bg); color: #fff; font-family: sans-serif; 
+            margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%;
+            touch-action: none; -webkit-user-select: none;
+        }
         
-        /* Kalibrációs képernyő */
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 250px; margin: 10px 0; font-size: 16px; text-align: center; }
-        button { background: var(--accent); color: #000; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-
-        /* Mérőfelület */
-        #canvas { display: none; width: 100vw; height: 100vh; position: relative; }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 200px; margin: 10px 0; font-size: 16px; text-align: center; }
         
-        /* Fix vonalzók a széleken */
-        .ruler-h { position: absolute; top: 0; left: 0; height: 40px; width: 100%; border-bottom: 1px solid #333; }
-        .ruler-v { position: absolute; top: 0; left: 0; width: 40px; height: 100%; border-right: 1px solid #333; }
+        #canvas { display: none; width: 100vw; height: 100vh; position: relative; background: radial-gradient(circle, #111 1px, transparent 1px); background-size: 20px 20px; }
 
-        /* A mérő téglalap */
+        /* A mérőkeret */
         #box { 
-            position: absolute; top: 100px; left: 100px; 
-            width: 75px; height: 75px; /* Alap 20mm körüli méret */
-            border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.1);
-            box-sizing: border-box;
-        }
-        #handle { 
-            position: absolute; bottom: -15px; right: -15px; 
-            width: 30px; height: 30px; background: var(--accent); 
-            border-radius: 50%; border: 5px solid #000;
-        }
-        #label { 
-            position: absolute; top: -25px; left: 0; 
-            font-size: 14px; color: var(--accent); font-weight: bold; white-space: nowrap;
+            position: absolute; top: 150px; left: 150px; 
+            width: 150px; height: 100px;
+            border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.05);
+            box-sizing: border-box; touch-action: none;
         }
 
-        /* Kézi bevitel panel */
-        #manual-input {
-            position: fixed; bottom: 20px; right: 20px; background: rgba(26,26,26,0.8);
-            padding: 10px; border-radius: 12px; display: flex; gap: 5px; border: 1px solid #333;
+        /* Mozgató gomb (Bal fent) */
+        #move-handle {
+            position: absolute; top: -15px; left: -15px;
+            width: 34px; height: 34px; background: #fff;
+            border-radius: 50%; border: 4px solid #333; cursor: move; z-index: 10;
         }
-        .small-in { width: 60px !important; margin: 0 !important; padding: 5px !important; font-size: 12px !important; }
+
+        /* Méretező gomb (Jobb lent) */
+        #resize-handle { 
+            position: absolute; bottom: -15px; right: -15px; 
+            width: 34px; height: 34px; background: var(--accent); 
+            border-radius: 50%; border: 4px solid #000; cursor: nwse-resize; z-index: 10;
+        }
+
+        #label { 
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            font-size: 16px; color: var(--accent); font-weight: bold; white-space: nowrap;
+            background: #000; padding: 2px 8px; border-radius: 4px;
+        }
+
+        #controls {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; background: rgba(20,20,20,0.9); padding: 15px; border-radius: 15px; border: 1px solid #333;
+        }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
 <div id="overlay">
-    <h2>Elite Méretező</h2>
-    <input type="number" id="ppiInput" value="243" placeholder="PPI érték">
-    <button onclick="initApp()">INDÍTÁS</button>
-    <p style="font-size: 12px; color: #666; margin-top: 20px;">Tab S7 FE: 243 | Note 20 Ultra: 496</p>
+    <h2 style="color:var(--accent)">Kalibráció</h2>
+    <input type="number" id="ppiInput" value="243">
+    <button onclick="initApp()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:8px; font-weight:bold;">INDÍTÁS</button>
 </div>
 
 <div id="canvas">
     <div id="box">
-        <div id="label">20 x 20 mm</div>
-        <div id="handle"></div>
+        <div id="move-handle"></div>
+        <div id="label">0 x 0 mm</div>
+        <div id="resize-handle"></div>
     </div>
 
-    <div id="manual-input">
-        <input type="number" id="m-w" class="small-in" placeholder="Szél.">
-        <input type="number" id="m-h" class="small-in" placeholder="Mag.">
-        <button onclick="setManual()" style="padding: 5px 10px; font-size: 12px;">OK</button>
+    <div id="controls">
+        <input type="number" id="m-w" style="width:70px" placeholder="Szél. mm">
+        <input type="number" id="m-h" style="width:70px" placeholder="Mag. mm">
+        <button onclick="setManual()" style="background:#fff; border:none; padding:10px; border-radius:5px; font-weight:bold;">OK</button>
     </div>
 </div>
 
 <script>
     let ppmm = 1;
-    const box = document.getElementById('box');
-    const handle = document.getElementById('handle');
-    const label = document.getElementById('label');
-    const canvas = document.getElementById('canvas');
+    let activeAction = null; // 'move' vagy 'resize'
+    let startX, startY, startW, startH, startLeft, startTop;
 
     function initApp() {
-        const ppi = document.getElementById('ppiInput').value;
-        ppmm = ppi / 25.4;
+        ppmm = document.getElementById('ppiInput').value / 25.4;
         document.getElementById('overlay').style.display = 'none';
-        canvas.style.display = 'block';
-        updateLabel(box.offsetWidth, box.offsetHeight);
+        document.getElementById('canvas').style.display = 'block';
+        updateLabel();
     }
 
-    // Manuális beállítás mm-ben
+    const box = document.getElementById('box');
+    const moveH = document.getElementById('move-handle');
+    const resizeH = document.getElementById('resize-handle');
+
+    // Mozgatás kezdete
+    moveH.addEventListener('pointerdown', (e) => {
+        activeAction = 'move';
+        startX = e.clientX; startY = e.clientY;
+        startLeft = box.offsetLeft; startTop = box.offsetTop;
+        moveH.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+
+    // Méretezés kezdete
+    resizeH.addEventListener('pointerdown', (e) => {
+        activeAction = 'resize';
+        startX = e.clientX; startY = e.clientY;
+        startW = box.offsetWidth; startH = box.offsetHeight;
+        resizeH.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!activeAction) return;
+
+        if (activeAction === 'move') {
+            box.style.left = (startLeft + (e.clientX - startX)) + "px";
+            box.style.top = (startTop + (e.clientY - startY)) + "px";
+        } 
+        else if (activeAction === 'resize') {
+            let newW = startW + (e.clientX - startX);
+            let newH = startH + (e.clientY - startY);
+            if (newW > 10) box.style.width = newW + "px";
+            if (newH > 10) box.style.height = newH + "px";
+        }
+        updateLabel();
+    });
+
+    window.addEventListener('pointerup', () => { activeAction = null; });
+
+    function updateLabel() {
+        const w = (box.offsetWidth / ppmm).toFixed(1);
+        const h = (box.offsetHeight / ppmm).toFixed(1);
+        document.getElementById('label').innerText = `${w} mm × ${h} mm`;
+    }
+
     function setManual() {
         const w = document.getElementById('m-w').value;
         const h = document.getElementById('m-h').value;
         if(w) box.style.width = (w * ppmm) + "px";
         if(h) box.style.height = (h * ppmm) + "px";
-        updateLabel(box.offsetWidth, box.offsetHeight);
+        updateLabel();
     }
 
-    function updateLabel(pxW, pxH) {
-        const mmW = (pxW / ppmm).toFixed(1);
-        const mmH = (pxH / ppmm).toFixed(1);
-        label.innerText = `${mmW} mm × ${mmH} mm`;
-    }
-
-    // Drag & Resize logika (Tollal és ujjal is megy)
-    let isResizing = false;
-
-    handle.addEventListener('pointerdown', (e) => {
-        isResizing = true;
-        e.stopPropagation();
-        handle.setPointerCapture(e.pointerId);
-    });
-
-    window.addEventListener('pointermove', (e) => {
-        if (!isResizing) return;
-        
-        const rect = box.getBoundingClientRect();
-        let newWidth = e.clientX - rect.left;
-        let newHeight = e.clientY - rect.top;
-
-        // Minimum méret (5mm)
-        if (newWidth < 5 * ppmm) newWidth = 5 * ppmm;
-        if (newHeight < 5 * ppmm) newHeight = 5 * ppmm;
-
-        box.style.width = newWidth + "px";
-        box.style.height = newHeight + "px";
-        
-        updateLabel(newWidth, newHeight);
-    });
-
-    window.addEventListener('pointerup', () => {
-        isResizing = false;
-    });
-
+    // Frissítés gátlása (visszahúzás ellen)
+    window.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
 </script>
 </body>
 </html>
