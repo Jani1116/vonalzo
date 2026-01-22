@@ -3,82 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Univerzális Méretező</title>
+    <title>Elite Digitális Tolómérő</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; touch-action: none; }
         
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 10px; width: 80%; margin: 10px 0; font-size: 16px; text-align: center; }
+        /* Kalibrációs képernyő */
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; width: 250px; margin: 10px 0; font-size: 16px; text-align: center; }
         button { background: var(--accent); color: #000; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        /* Mérőfelület */
+        #canvas { display: none; width: 100vw; height: 100vh; position: relative; }
         
-        .ruler { position: relative; height: 100vh; width: 100vw; display: none; }
-        .cm-mark { position: absolute; left: 0; height: 2px; background: var(--accent); width: 50px; }
-        .mm-mark { position: absolute; left: 0; height: 1px; background: #444; width: 25px; }
-        .cm-text { position: absolute; left: 60px; font-size: 14px; color: var(--accent); transform: translateY(-50%); }
-        .info { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #444; }
+        /* Fix vonalzók a széleken */
+        .ruler-h { position: absolute; top: 0; left: 0; height: 40px; width: 100%; border-bottom: 1px solid #333; }
+        .ruler-v { position: absolute; top: 0; left: 0; width: 40px; height: 100%; border-right: 1px solid #333; }
+
+        /* A mérő téglalap */
+        #box { 
+            position: absolute; top: 100px; left: 100px; 
+            width: 75px; height: 75px; /* Alap 20mm körüli méret */
+            border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.1);
+            box-sizing: border-box;
+        }
+        #handle { 
+            position: absolute; bottom: -15px; right: -15px; 
+            width: 30px; height: 30px; background: var(--accent); 
+            border-radius: 50%; border: 5px solid #000;
+        }
+        #label { 
+            position: absolute; top: -25px; left: 0; 
+            font-size: 14px; color: var(--accent); font-weight: bold; white-space: nowrap;
+        }
+
+        /* Kézi bevitel panel */
+        #manual-input {
+            position: fixed; bottom: 20px; right: 20px; background: rgba(26,26,26,0.8);
+            padding: 10px; border-radius: 12px; display: flex; gap: 5px; border: 1px solid #333;
+        }
+        .small-in { width: 60px !important; margin: 0 !important; padding: 5px !important; font-size: 12px !important; }
     </style>
 </head>
 <body>
 
 <div id="overlay">
-    <h2>Méretező Kalibráció</h2>
-    <p>Írd be a készülék <strong>PPI</strong> értékét:<br>
-    <small>(Tab S7 FE: 243 | Note 20 Ultra: 496)</small></p>
-    <input type="number" id="ppiInput" placeholder="Például: 243" inputmode="numeric">
-    <button onclick="startRuler()">INDÍTÁS (TELJES KÉPERNYŐ)</button>
+    <h2>Elite Méretező</h2>
+    <input type="number" id="ppiInput" value="243" placeholder="PPI érték">
+    <button onclick="initApp()">INDÍTÁS</button>
+    <p style="font-size: 12px; color: #666; margin-top: 20px;">Tab S7 FE: 243 | Note 20 Ultra: 496</p>
 </div>
 
-<div id="ruler" class="ruler"></div>
-<div class="info" id="devInfo"></div>
+<div id="canvas">
+    <div id="box">
+        <div id="label">20 x 20 mm</div>
+        <div id="handle"></div>
+    </div>
+
+    <div id="manual-input">
+        <input type="number" id="m-w" class="small-in" placeholder="Szél.">
+        <input type="number" id="m-h" class="small-in" placeholder="Mag.">
+        <button onclick="setManual()" style="padding: 5px 10px; font-size: 12px;">OK</button>
+    </div>
+</div>
 
 <script>
-    function startRuler() {
+    let ppmm = 1;
+    const box = document.getElementById('box');
+    const handle = document.getElementById('handle');
+    const label = document.getElementById('label');
+    const canvas = document.getElementById('canvas');
+
+    function initApp() {
         const ppi = document.getElementById('ppiInput').value;
-        if (!ppi) { alert("Kérlek írd be a PPI-t!"); return; }
-
-        // Teljes képernyő kérése
-        const doc = document.documentElement;
-        if (doc.requestFullscreen) doc.requestFullscreen();
-        else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
-
-        // Számítás: 1 inch = 25.4 mm. Pixels per mm = PPI / 25.4
-        const ppmm = ppi / 25.4;
-        drawRuler(ppmm);
-
+        ppmm = ppi / 25.4;
         document.getElementById('overlay').style.display = 'none';
-        document.getElementById('ruler').style.display = 'block';
-        document.getElementById('devInfo').innerText = "PPI: " + ppi;
+        canvas.style.display = 'block';
+        updateLabel(box.offsetWidth, box.offsetHeight);
     }
 
-    function drawRuler(ppmm) {
-        const container = document.getElementById('ruler');
-        container.innerHTML = '';
-        
-        // 100 cm hosszig rajzolunk (vagy amíg a képernyő tart)
-        for (let i = 0; i <= 1000; i++) {
-            const pos = i * ppmm;
-            const mark = document.createElement('div');
-            
-            if (i % 10 === 0) {
-                mark.className = 'cm-mark';
-                const text = document.createElement('span');
-                text.className = 'cm-text';
-                text.innerText = (i / 10) + " cm";
-                text.style.top = pos + "px";
-                container.appendChild(text);
-            } else if (i % 5 === 0) {
-                mark.className = 'mm-mark';
-                mark.style.width = "35px";
-                mark.style.background = "#888";
-            } else {
-                mark.className = 'mm-mark';
-            }
-            
-            mark.style.top = pos + "px";
-            container.appendChild(mark);
-        }
+    // Manuális beállítás mm-ben
+    function setManual() {
+        const w = document.getElementById('m-w').value;
+        const h = document.getElementById('m-h').value;
+        if(w) box.style.width = (w * ppmm) + "px";
+        if(h) box.style.height = (h * ppmm) + "px";
+        updateLabel(box.offsetWidth, box.offsetHeight);
     }
+
+    function updateLabel(pxW, pxH) {
+        const mmW = (pxW / ppmm).toFixed(1);
+        const mmH = (pxH / ppmm).toFixed(1);
+        label.innerText = `${mmW} mm × ${mmH} mm`;
+    }
+
+    // Drag & Resize logika (Tollal és ujjal is megy)
+    let isResizing = false;
+
+    handle.addEventListener('pointerdown', (e) => {
+        isResizing = true;
+        e.stopPropagation();
+        handle.setPointerCapture(e.pointerId);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!isResizing) return;
+        
+        const rect = box.getBoundingClientRect();
+        let newWidth = e.clientX - rect.left;
+        let newHeight = e.clientY - rect.top;
+
+        // Minimum méret (5mm)
+        if (newWidth < 5 * ppmm) newWidth = 5 * ppmm;
+        if (newHeight < 5 * ppmm) newHeight = 5 * ppmm;
+
+        box.style.width = newWidth + "px";
+        box.style.height = newHeight + "px";
+        
+        updateLabel(newWidth, newHeight);
+    });
+
+    window.addEventListener('pointerup', () => {
+        isResizing = false;
+    });
+
 </script>
 </body>
 </html>
