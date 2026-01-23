@@ -3,93 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v9.6</title>
+    <title>Elite Méretező PRO v9.7</title>
     <style>
-        :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
+        :root { --accent: #30d158; --bg: #000; }
+        
+        /* KÉNYSZERÍTETT TILTÁSOK */
+        * {
+            touch-action: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important;
+            overscroll-behavior: none !important;
+        }
+
         html, body { 
-            overscroll-behavior: none !important; overflow: hidden !important;
-            position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
-            background: var(--bg); color: #fff; font-family: sans-serif; 
-            touch-action: none !important; -webkit-user-select: none; user-select: none;
+            position: fixed; overflow: hidden !important;
+            width: 100vw; height: 100vh; margin: 0; padding: 0;
+            background: var(--bg); color: #fff; font-family: sans-serif;
         }
         
-        #overlay { 
-            position: fixed; inset: 0; background: #000; z-index: 3000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            padding: 15px; touch-action: none !important;
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #canvas { display: none; width: 100vw; height: 100vh; position: relative; background: #000; }
+        
+        /* FIXÁLT PÖTTY MÉRET - BÁRMILYEN KIJELZŐN */
+        .handle { 
+            width: 28px !important; 
+            height: 28px !important; 
+            min-width: 28px !important;
+            min-height: 28px !important;
+            border-radius: 50%; 
+            position: absolute; 
+            z-index: 100; 
+            border: 2px solid #000; 
+            pointer-events: auto !important;
         }
+        #move-handle { top: -14px; left: -14px; background: #fff; }
+        #resize-handle { bottom: -14px; right: -14px; background: var(--accent); }
 
-        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 150px; margin: 5px; text-align: center; font-size: 16px; }
-        #cal-area { position: relative; margin: 15px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none; }
+        #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.1); box-sizing: border-box; pointer-events: none; }
+        
+        /* TÖBBI STÍLUS (RÖVIDEN) */
+        #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.95); padding: 10px; border-radius: 12px; border: 1px solid #444; pointer-events: auto !important; z-index: 4000; }
+        .adj-btn { background: #333; color: white; border: 1px solid #555; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; pointer-events: auto !important; }
+        .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 150px; text-align: center; pointer-events: auto !important; }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 55px; text-align: center; pointer-events: auto !important; }
+        .f-btn, .ok-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 5px; font-weight: bold; pointer-events: auto !important; }
+        .ok-btn { background: var(--accent); color: #000; }
+        .cal-type-btn, .fix-btn, .final-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; margin: 5px; pointer-events: auto !important; }
+        .active { border-color: var(--accent); background: rgba(48, 209, 88, 0.2); }
+        #cal-area { height: 100px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
         #cal-main-line { height: 2px; background: #fff; width: 150px; position: relative; }
-        .cal-v-left { position: absolute; left: 0; top: -40px; width: 2px; height: 80px; background: #fff; }
-        .cal-v-right { position: absolute; right: 0; top: -40px; width: 3px; height: 80px; background: var(--accent); }
-
-        #login-screen { text-align: center; }
-        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; }
-        
-        #canvas { display: none; width: 100%; height: 100%; position: relative; touch-action: none !important; }
-        #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
-        
-        /* VISSZAÁLLÍTOTT KISEBB PÖTTYÖK */
-        .handle { width: 30px; height: 30px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; pointer-events: auto !important; }
-        #move-handle { top: -15px; left: -15px; background: #fff; }
-        #resize-handle { bottom: -15px; right: -15px; background: var(--accent); }
-
-        .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: var(--bg); padding: 0 5px; white-space: nowrap; }
-        .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 130px; text-align: center; background: var(--bg); }
-        
-        #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; pointer-events: auto; }
-        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 60px; text-align: center; user-select: auto; }
-        .f-btn { background: #333; color: #fff; border: none; padding: 10px 14px; border-radius: 5px; font-weight: bold; touch-action: manipulation; }
-        .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; color: #000; }
-        
-        .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 13px; pointer-events: auto !important; }
-        .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
-        .adj-btn { background: #333; color: white; border: 1px solid #555; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; pointer-events: auto !important; touch-action: none; }
-        .fix-btn { background: #222; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; width: 140px; pointer-events: auto !important; }
-        .fix-btn.active { background: #30d15833; border-color: var(--accent); color: var(--accent); }
-        .final-btn { background: #1a1a1a; border: 1px solid #333; padding: 15px 50px; border-radius: 12px; font-weight: bold; color: #555; margin-top: 15px; width: 280px; }
-        .final-btn.ready { background: var(--accent); color: #000; border: none; pointer-events: auto !important; }
+        .cal-v-left, .cal-v-right { position: absolute; top: -40px; width: 2px; height: 80px; background: #fff; }
+        .cal-v-right { right: 0; background: var(--accent); width: 3px; }
+        .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: var(--accent); font-weight: bold; font-size: 14px; background: #000; padding: 0 5px; }
+        .label-h { position: absolute; left: -70px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: var(--accent); font-weight: bold; font-size: 14px; width: 120px; text-align: center; background: #000; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
 <div id="overlay">
-    <div id="login-screen" style="display:none;">
-        <div id="saved-btn" onclick="initApp()" style="pointer-events: auto !important;">
-            <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
-            <div id="s-ppi" style="color:var(--accent); font-size:16px; margin-top:5px;">Dupla kalibráció aktív</div>
+    <div id="login-screen" style="display:none; text-align: center;">
+        <div id="saved-btn" style="background:#111; border:2px solid var(--accent); padding:20px; border-radius:15px; margin-bottom:20px;" onclick="initApp()">
+            <div id="s-name" style="font-size:20px; font-weight:bold;"></div>
+            <div style="color:var(--accent)">Betöltés...</div>
         </div>
-        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px; border-radius:8px; pointer-events: auto !important;">Új kalibrálás</button>
+        <button onclick="showRegister()">Új kalibrálás</button>
     </div>
 
-    <div id="register-screen" style="text-align:center; width: 100%; max-width: 400px;">
-        <h3 style="color:var(--accent); margin-bottom:10px;">Kalibrálás (Rövid oldal)</h3>
-        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <button id="btn-card" class="cal-type-btn active" onclick="setObj('card')">Személyi (54mm)</button>
-            <button id="btn-cash" class="cal-type-btn" onclick="setObj('cash')">Papírpénz (70mm)</button>
-        </div>
-        <div style="display: flex; justify-content: space-around; gap: 10px;">
-            <div style="text-align: center;">
-                <button id="btn-port" class="cal-type-btn" onclick="setOrient('port')">ÁLLÓ mód</button><br>
-                <button id="fix-port" class="fix-btn" onclick="lockValue('port')">RÖGZÍT (1/0)</button>
-            </div>
-            <div style="text-align: center;">
-                <button id="btn-land" class="cal-type-btn" onclick="setOrient('land')">FEKVŐ mód</button><br>
-                <button id="fix-land" class="fix-btn" onclick="lockValue('land')">RÖGZÍT (2/0)</button>
-            </div>
+    <div id="register-screen" style="text-align:center;">
+        <h3>Kalibrálás</h3>
+        <button id="btn-card" class="cal-type-btn active" onclick="setObj('card')">Kártya</button>
+        <button id="btn-cash" class="cal-type-btn" onclick="setObj('cash')">Pénz</button>
+        <div style="display:flex; gap:10px; justify-content:center; margin: 10px 0;">
+            <button id="btn-port" class="cal-type-btn" onclick="setOrient('port')">ÁLLÓ</button>
+            <button id="btn-land" class="cal-type-btn" onclick="setOrient('land')">FEKVŐ</button>
         </div>
         <div id="cal-area"><div id="cal-main-line"><div class="cal-v-left"></div><div class="cal-v-right"></div></div></div>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 15px;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:20px;">
             <button class="adj-btn" id="btn-minus">-</button>
-            <input type="number" id="calRef" class="setup-input" style="width: 70px;" value="54.0" readonly>
+            <input type="number" id="calRef" class="setup-input" style="width:70px" value="54.0" readonly>
             <button class="adj-btn" id="btn-plus">+</button>
         </div>
-        <input type="text" id="devName" class="setup-input" style="width: 250px; pointer-events: auto !important;" placeholder="Eszköz neve" value="Samsung Eszköz">
-        <br>
-        <button id="btn-final" onclick="doCalibrate()" class="final-btn">MENTÉS ÉS INDÍTÁS</button>
+        <div style="margin-top:10px;">
+            <button id="fix-port" class="fix-btn" onclick="lockValue('port')">ÁLLÓ RÖGZÍT</button>
+            <button id="fix-land" class="fix-btn" onclick="lockValue('land')">FEKVŐ RÖGZÍT</button>
+        </div>
+        <input type="text" id="devName" class="setup-input" style="margin-top:15px; width:200px" value="Samsung">
+        <br><button id="btn-final" class="final-btn" style="margin-top:15px; width:220px; opacity:0.3" onclick="doCalibrate()">MENTÉS</button>
     </div>
 </div>
 
@@ -102,180 +102,127 @@
     </div>
     <div id="controls">
         <button class="f-btn" onclick="adj('w',-0.1)">-</button>
-        <input type="number" id="m-w" class="m-input" inputmode="decimal">
+        <input type="number" id="m-w" class="m-input" step="0.1">
         <button class="f-btn" onclick="adj('w',0.1)">+</button>
-        <span style="width:15px"></span>
+        <div style="width:10px"></div>
         <button class="f-btn" onclick="adj('h',-0.1)">-</button>
-        <input type="number" id="m-h" class="m-input" inputmode="decimal">
+        <input type="number" id="m-h" class="m-input" step="0.1">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
-        <button onclick="setManual()" class="ok-btn">OK</button>
+        <button class="ok-btn" onclick="setManual()">OK</button>
     </div>
 </div>
 
 <script>
-    let temp_port = null, temp_land = null;
-    let curObj = 'card', curOrient = null;
+    let temp_port = null, temp_land = null, curOrient = null;
     let holdTimer, holdInterval, speed = 1;
-    const calMainLine = document.getElementById('cal-main-line');
+    const box = document.getElementById('box');
+    const calLine = document.getElementById('cal-main-line');
 
-    const setupHoldBtn = (id, val) => {
+    // MUNKATERÜLET ÉS FRISSÍTÉS FIXÁLÁSA
+    document.addEventListener('touchstart', e => {
+        if (!e.target.closest('button, input, .handle, #saved-btn')) e.preventDefault();
+    }, {passive: false});
+    document.addEventListener('touchmove', e => {
+        if (!window.activeAction) e.preventDefault();
+    }, {passive: false});
+
+    const setupBtn = (id, val) => {
         const btn = document.getElementById(id);
         const start = (e) => {
-            if(!curOrient) return;
-            e.preventDefault(); e.stopPropagation();
+            if(!curOrient) return; e.preventDefault(); e.stopPropagation();
             speed = 1; adjCal(val);
             holdTimer = setTimeout(() => {
                 holdInterval = setInterval(() => { adjCal(val * Math.floor(speed)); speed += 0.2; }, 50);
             }, 500);
         };
-        const stop = (e) => { 
-            e.preventDefault(); 
-            clearTimeout(holdTimer); clearInterval(holdInterval); 
-        };
+        const stop = () => { clearTimeout(holdTimer); clearInterval(holdInterval); };
         btn.addEventListener('pointerdown', start);
         btn.addEventListener('pointerup', stop);
         btn.addEventListener('pointerleave', stop);
     };
-    setupHoldBtn('btn-plus', 1);
-    setupHoldBtn('btn-minus', -1);
+    setupBtn('btn-plus', 1); setupBtn('btn-minus', -1);
 
     window.onload = () => {
-        const draft = JSON.parse(localStorage.getItem('elite_draft') || '{}');
-        if(draft.port) { temp_port = draft.port; updateUI('port'); }
-        if(draft.land) { temp_land = draft.land; updateUI('land'); }
-        if(draft.devName) document.getElementById('devName').value = draft.devName;
-
-        const saved = localStorage.getItem('elite_r_v96');
+        const saved = localStorage.getItem('elite_r_v97');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('register-screen').style.display = 'none';
         }
-        checkReady();
     };
 
-    function setObj(obj) {
-        curObj = obj;
-        document.getElementById('btn-card').classList.toggle('active', obj === 'card');
-        document.getElementById('btn-cash').classList.toggle('active', obj === 'cash');
-        document.getElementById('calRef').value = (obj === 'card' ? "54.0" : "70.0");
+    function setObj(o) {
+        document.getElementById('btn-card').classList.toggle('active', o==='card');
+        document.getElementById('btn-cash').classList.toggle('active', o==='cash');
+        document.getElementById('calRef').value = o==='card' ? "54.0" : "70.0";
     }
-
-    function setOrient(orient) {
-        curOrient = orient;
-        document.getElementById('btn-port').classList.toggle('active', orient === 'port');
-        document.getElementById('btn-land').classList.toggle('active', orient === 'land');
+    function setOrient(o) {
+        curOrient = o;
+        document.getElementById('btn-port').classList.toggle('active', o==='port');
+        document.getElementById('btn-land').classList.toggle('active', o==='land');
     }
-
-    function adjCal(val) {
-        calMainLine.style.width = Math.max(10, calMainLine.offsetWidth + val) + "px";
+    function adjCal(v) { calLine.style.width = Math.max(10, calLine.offsetWidth + v) + "px"; }
+    function lockValue(o) {
+        if(curOrient !== o) return;
+        const ppi = calLine.offsetWidth / parseFloat(document.getElementById('calRef').value);
+        if(o === 'port') temp_port = ppi; else temp_land = ppi;
+        document.getElementById('fix-'+o).classList.add('active');
+        if(temp_port && temp_land) { document.getElementById('btn-final').style.opacity = "1"; }
     }
-
-    function lockValue(orient) {
-        if(curOrient !== orient) { alert("Válaszd ki az irányt!"); return; }
-        const ppi = calMainLine.offsetWidth / parseFloat(document.getElementById('calRef').value);
-        const draft = JSON.parse(localStorage.getItem('elite_draft') || '{}');
-        if(orient === 'port') { temp_port = ppi; draft.port = ppi; }
-        else { temp_land = ppi; draft.land = ppi; }
-        draft.devName = document.getElementById('devName').value;
-        localStorage.setItem('elite_draft', JSON.stringify(draft));
-        updateUI(orient); checkReady();
-    }
-
-    function updateUI(orient) {
-        const fixBtn = document.getElementById('fix-' + orient);
-        fixBtn.innerText = orient === 'port' ? "RÖGZÍTVE (1/1)" : "RÖGZÍTVE (2/1)";
-        fixBtn.classList.add('active');
-    }
-
-    function checkReady() {
-        if(temp_port && temp_land) {
-            const final = document.getElementById('btn-final');
-            final.classList.add('ready');
-            final.innerText = "MENTÉS ÉS INDÍTÁS";
-        }
-    }
-
     function doCalibrate() {
-        const data = { name: document.getElementById('devName').value, port: temp_port, land: temp_land };
-        localStorage.setItem('elite_r_v96', JSON.stringify(data));
-        localStorage.removeItem('elite_draft');
+        if(!temp_port || !temp_land) return;
+        localStorage.setItem('elite_r_v97', JSON.stringify({name: document.getElementById('devName').value, port: temp_port, land: temp_land}));
         location.reload();
     }
-
     function initApp() {
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
-        window.addEventListener('resize', updateLabel);
         updateLabel();
     }
-
     function updateLabel() {
-        const saved = JSON.parse(localStorage.getItem('elite_r_v96'));
-        if(!saved) return;
-        const isPort = window.innerHeight > window.innerWidth;
-        const ppmm = isPort ? saved.port : saved.land;
+        const d = JSON.parse(localStorage.getItem('elite_r_v97'));
+        const ppmm = window.innerHeight > window.innerWidth ? d.port : d.land;
         window.currentPpmm = ppmm;
-        const w = (box.offsetWidth / ppmm).toFixed(1);
-        const h = (box.offsetHeight / ppmm).toFixed(1);
-        document.getElementById('label-w').innerText = w + " mm";
-        document.getElementById('label-h').innerText = h + " mm";
-        document.getElementById('m-w').value = w;
-        document.getElementById('m-h').value = h;
+        document.getElementById('label-w').innerText = (box.offsetWidth / ppmm).toFixed(1) + " mm";
+        document.getElementById('label-h').innerText = (box.offsetHeight / ppmm).toFixed(1) + " mm";
     }
 
-    let activeAction = null, bStartX, bStartY, bStartW, bStartH, bStartLeft, bStartTop;
-    const box = document.getElementById('box');
+    let bSX, bSY, bSW, bSH, bSL, bST;
     const handleStart = (e, type) => {
         e.preventDefault(); e.stopPropagation();
-        activeAction = type; bStartX = e.clientX; bStartY = e.clientY;
-        bStartW = box.offsetWidth; bStartH = box.offsetHeight;
-        bStartLeft = box.offsetLeft; bStartTop = box.offsetTop;
+        window.activeAction = type;
+        bSX = e.clientX; bSY = e.clientY;
+        bSW = box.offsetWidth; bSH = box.offsetHeight;
+        bSL = box.offsetLeft; bST = box.offsetTop;
         e.target.setPointerCapture(e.pointerId);
     };
-    document.getElementById('move-handle').addEventListener('pointerdown', (e) => handleStart(e, 'move'));
-    document.getElementById('resize-handle').addEventListener('pointerdown', (e) => handleStart(e, 'resize'));
-    window.addEventListener('pointermove', (e) => {
-        if (!activeAction) return;
-        if (activeAction === 'move') {
-            box.style.left = (bStartLeft + (e.clientX - bStartX)) + "px";
-            box.style.top = (bStartTop + (e.clientY - bStartY)) + "px";
-        } else if (activeAction === 'resize') {
-            box.style.width = Math.max(20, bStartW + (e.clientX - bStartX)) + "px";
-            box.style.height = Math.max(20, bStartH + (e.clientY - bStartY)) + "px";
+    document.getElementById('move-handle').addEventListener('pointerdown', e => handleStart(e, 'move'));
+    document.getElementById('resize-handle').addEventListener('pointerdown', e => handleStart(e, 'resize'));
+    window.addEventListener('pointermove', e => {
+        if (!window.activeAction) return;
+        if (window.activeAction === 'move') {
+            box.style.left = (bSL + (e.clientX - bSX)) + "px";
+            box.style.top = (bST + (e.clientY - bSY)) + "px";
+        } else {
+            box.style.width = Math.max(30, bSW + (e.clientX - bSX)) + "px";
+            box.style.height = Math.max(30, bSH + (e.clientY - bSY)) + "px";
         }
         updateLabel();
     });
-    window.addEventListener('pointerup', () => activeAction = null);
+    window.addEventListener('pointerup', () => window.activeAction = null);
 
     function adj(t, v) {
-        const ppmm = window.currentPpmm;
-        if (t === 'w') box.style.width = (box.offsetWidth + (v * ppmm)) + "px";
-        else box.style.height = (box.offsetHeight + (v * ppmm)) + "px";
+        if (t === 'w') box.style.width = (box.offsetWidth + (v * window.currentPpmm)) + "px";
+        else box.style.height = (box.offsetHeight + (v * window.currentPpmm)) + "px";
         updateLabel();
     }
     function setManual() {
-        const ppmm = window.currentPpmm;
-        const w = document.getElementById('m-w').value, h = document.getElementById('m-h').value;
-        if(w) box.style.width = (w * ppmm) + "px";
-        if(h) box.style.height = (h * ppmm) + "px";
+        box.style.width = (document.getElementById('m-w').value * window.currentPpmm) + "px";
+        box.style.height = (document.getElementById('m-h').value * window.currentPpmm) + "px";
         updateLabel();
     }
-    function showRegister() { localStorage.removeItem('elite_r_v96'); location.reload(); }
-    
-    // SZIGORÚ TILTÁS A FRISSÍTÉS ÉS GÖRGETÉS ELLEN MINDEN FELÜLETEN
-    document.addEventListener('touchstart', (e) => {
-        if (e.target.closest('button, input, .handle, #saved-btn')) return;
-        e.preventDefault();
-    }, {passive: false});
-
-    document.addEventListener('touchmove', (e) => {
-        if (activeAction) return; 
-        e.preventDefault();
-    }, {passive: false});
-
-    document.addEventListener('contextmenu', e => e.preventDefault());
+    function showRegister() { localStorage.removeItem('elite_r_v97'); location.reload(); }
 </script>
 </body>
 </html>
