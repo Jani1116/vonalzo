@@ -3,41 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eredeti Fő Kód</title>
+    <title>Elite Méretező - EREDETI</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: sans-serif; }
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .btn { background: #333; color: #fff; padding: 20px; margin: 10px; border-radius: 10px; border: 1px solid #555; width: 200px; text-align: center; }
-        #canvas { display: none; width: 100vw; height: 100vh; position: relative; }
+        body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: sans-serif; touch-action: none; }
+        #canvas { width: 100vw; height: 100vh; position: relative; display: none; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid #30d158; background: rgba(48, 209, 88, 0.1); }
-        .handle { width: 30px; height: 30px; background: #fff; border-radius: 50%; position: absolute; }
-        #h-move { top: -15px; left: -15px; }
-        #h-res { bottom: -15px; right: -15px; background: #30d158; }
-        .label { position: absolute; background: #000; color: #30d158; padding: 2px 5px; font-size: 14px; white-space: nowrap; }
+        .handle { width: 34px; height: 34px; background: #fff; border-radius: 50%; position: absolute; z-index: 10; border: 2px solid #000; }
+        #h-move { top: -17px; left: -17px; }
+        #h-res { bottom: -17px; right: -17px; background: #30d158; }
+        .lbl { position: absolute; background: #000; color: #30d158; padding: 2px 5px; font-size: 14px; font-weight: bold; white-space: nowrap; border-radius: 3px; }
         #lbl-w { top: -25px; left: 50%; transform: translateX(-50%); }
-        #lbl-h { left: -60px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
-        #cal-line { width: 200px; height: 2px; background: #fff; position: relative; margin: 50px 0; }
-        .edge { position: absolute; top: -10px; width: 2px; height: 20px; background: #fff; }
-        .edge.r { right: 0; background: #30d158; }
+        #lbl-h { left: -65px; top: 50%; transform: translateY(-50%) rotate(-90deg); width: 100px; text-align: center; }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #cal-line { width: 200px; height: 2px; background: #fff; position: relative; margin: 40px 0; }
+        .v-edge { position: absolute; top: -15px; width: 2px; height: 30px; background: #fff; }
+        .v-edge.r { right: 0; background: #30d158; }
+        .btn { background: #222; color: #fff; border: 1px solid #444; padding: 15px 30px; border-radius: 10px; font-size: 18px; margin: 5px; }
     </style>
 </head>
 <body>
 
 <div id="overlay">
-    <div id="setup">
-        <h3>Kalibráció</h3>
-        <div id="cal-line"><div class="edge"></div><div class="edge r"></div></div>
+    <h2>Kalibráció (Bankkártya)</h2>
+    <div id="cal-line"><div class="v-edge"></div><div class="v-edge r"></div></div>
+    <div>
         <button class="btn" onclick="adj(-1)">-</button>
         <button class="btn" onclick="adj(1)">+</button>
-        <button class="btn" style="background:#30d158; color:#000;" onclick="start()">INDÍTÁS</button>
     </div>
+    <button class="btn" style="background:#30d158; color:#000; margin-top:30px; font-weight:bold;" onclick="start()">INDÍTÁS</button>
 </div>
 
 <div id="canvas">
-    <div id="box" style="width:100px; height:100px;">
+    <div id="box" style="width:150px; height:100px;">
         <div id="h-move" class="handle"></div>
-        <div id="lbl-w" class="label">0 mm</div>
-        <div id="lbl-h" class="label">0 mm</div>
+        <div id="lbl-w" class="lbl">0 mm</div>
+        <div id="lbl-h" class="lbl">0 mm</div>
         <div id="h-res" class="handle"></div>
     </div>
 </div>
@@ -59,6 +59,7 @@
         redraw();
     }
 
+    // Pointer események a precíz mozgatáshoz
     document.getElementById('h-move').onpointerdown = e => {
         active = 'm'; sX = e.clientX; sY = e.clientY; sL = box.offsetLeft; sT = box.offsetTop;
         e.target.setPointerCapture(e.pointerId);
@@ -75,8 +76,8 @@
             box.style.left = (sL + (e.clientX - sX)) + "px";
             box.style.top = (sT + (e.clientY - sY)) + "px";
         } else {
-            box.style.width = Math.max(20, sW + (e.clientX - sX)) + "px";
-            box.style.height = Math.max(20, sH + (e.clientY - sY)) + "px";
+            box.style.width = Math.max(30, sW + (e.clientX - sX)) + "px";
+            box.style.height = Math.max(30, sH + (e.clientY - sY)) + "px";
         }
         redraw();
     };
