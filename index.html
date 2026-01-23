@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v8.3</title>
+    <title>Elite Méretező PRO v1.1</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -40,6 +40,10 @@
         .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 14px; }
         .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
         .adj-btn { background: #333; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        
+        /* ÚJ STÍLUSOK A DUPLA RÖGZÍTÉSHEZ */
+        .fix-btn { background: #111; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; width: 140px; margin: 5px; font-size: 12px; font-weight: bold; }
+        .fix-btn.active { border-color: var(--accent); color: var(--accent); background: var(--box-bg); }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -63,7 +67,7 @@
             <button id="btn-cash" class="cal-type-btn" onclick="setCalType('cash')">Magyar papírpénz</button>
         </div>
 
-        <p id="cal-instruction" style="font-size:13px; color:#aaa; height: 40px; padding: 0 20px;">Helyezze a kártyát a vonalra, ha a határvonalak jól láthatóak -> Mentés</p>
+        <p id="cal-instruction" style="font-size:13px; color:#aaa; height: 40px; padding: 0 20px;">Helyezze a kártyát a vonalra, rögzítse mindkét irányt!</p>
         
         <div id="cal-area">
             <div id="cal-main-line">
@@ -79,9 +83,14 @@
             <button class="adj-btn" onclick="adjCal(1)">+</button>
         </div>
 
-        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Tab S7 FE">
+        <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 10px;">
+            <button id="fix-port" class="fix-btn" onclick="lockValue('port')">RÖGZÍT: ÁLLÓ</button>
+            <button id="fix-land" class="fix-btn" onclick="lockValue('land')">RÖGZÍT: FEKVŐ</button>
+        </div>
+
+        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Samsung Eszköz">
         <br>
-        <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000; margin-top:10px;">MENTÉS</button>
+        <button id="main-save-btn" onclick="doCalibrate()" style="background:#222; border:1px solid #444; padding:15px 40px; border-radius:10px; font-weight:bold; color:#555; margin-top:10px;">MENTÉS</button>
     </div>
 </div>
 
@@ -110,6 +119,9 @@
     let ppmm = 1;
     let activeAction = null;
     let startX, startW;
+    
+    // ÚJ: ADATOK TÁROLÁSA
+    let temp_port = null, temp_land = null;
 
     const calMainLine = document.getElementById('cal-main-line');
     const calHandle = document.getElementById('cal-handle');
@@ -122,13 +134,19 @@
     });
 
     window.onload = () => {
-        const saved = localStorage.getItem('elite_r_dev');
+        // Piszkozat visszatöltése (elforgatás védelem)
+        const draft = JSON.parse(localStorage.getItem('elite_draft') || '{}');
+        if(draft.port) { temp_port = draft.port; updateUI('port'); }
+        if(draft.land) { temp_land = draft.land; updateUI('land'); }
+
+        const saved = localStorage.getItem('elite_r_dev_v2');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('register-screen').style.display = 'none';
         }
+        checkReady();
     };
 
     function setCalType(type) {
@@ -139,15 +157,38 @@
 
         if(type === 'card') {
             refInput.value = "85.6";
-            inst.innerText = "Helyezze a kártyát a vonalra, ha a határvonalak jól láthatóak -> Mentés";
         } else {
             refInput.value = "70.0";
-            inst.innerText = "Helyezze a papírpénzt a vonalra, ha a határvonalak jól láthatóak -> Mentés";
         }
     }
 
     function adjCal(val) {
         calMainLine.style.width = Math.max(20, calMainLine.offsetWidth + val) + "px";
+    }
+
+    // ÚJ: EGYEDI IRÁNY RÖGZÍTÉSE
+    function lockValue(o) {
+        const val = calMainLine.offsetWidth / parseFloat(document.getElementById('calRef').value);
+        const draft = JSON.parse(localStorage.getItem('elite_draft') || '{}');
+        if(o === 'port') { temp_port = val; draft.port = val; }
+        else { temp_land = val; draft.land = val; }
+        localStorage.setItem('elite_draft', JSON.stringify(draft));
+        updateUI(o);
+        checkReady();
+    }
+
+    function updateUI(o) {
+        const btn = document.getElementById('fix-' + o);
+        btn.classList.add('active');
+        btn.innerText = o === 'port' ? "ÁLLÓ RÖGZÍTVE" : "FEKVŐ RÖGZÍTVE";
+    }
+
+    function checkReady() {
+        if(temp_port && temp_land) {
+            const saveBtn = document.getElementById('main-save-btn');
+            saveBtn.style.background = "var(--accent)";
+            saveBtn.style.color = "#000";
+        }
     }
 
     function showRegister() {
@@ -158,17 +199,14 @@
     }
 
     function doCalibrate() {
-        const refMm = parseFloat(document.getElementById('calRef').value);
-        const linePx = calMainLine.offsetWidth;
-        const calculatedPpmm = linePx / refMm;
+        if(!temp_port || !temp_land) { alert("Mindkét irányt rögzítse!"); return; }
         const name = document.getElementById('devName').value || "Eszköz";
-        localStorage.setItem('elite_r_dev', JSON.stringify({name: name, ppi: calculatedPpmm.toFixed(6)}));
+        localStorage.setItem('elite_r_dev_v2', JSON.stringify({name: name, port: temp_port, land: temp_land}));
+        localStorage.removeItem('elite_draft');
         location.reload();
     }
 
     function initApp() {
-        const saved = JSON.parse(localStorage.getItem('elite_r_dev'));
-        ppmm = parseFloat(saved.ppi);
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
@@ -206,6 +244,11 @@
     window.addEventListener('pointerup', () => { activeAction = null; });
 
     function updateLabel() {
+        const saved = JSON.parse(localStorage.getItem('elite_r_dev_v2'));
+        if(!saved) return;
+        // Automatikus PPI váltás elforgatáskor
+        ppmm = window.innerHeight > window.innerWidth ? saved.port : saved.land;
+        
         const w = (box.offsetWidth / ppmm).toFixed(1);
         const h = (box.offsetHeight / ppmm).toFixed(1);
         document.getElementById('label-w').innerText = w + " mm";
