@@ -16,8 +16,7 @@
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
         
-        /* KALIBRÁCIÓS FELÜLET */
-        #cal-area { position: relative; margin: 40px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
+        #cal-area { position: relative; margin: 20px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
         #cal-main-line { height: 2px; background: #fff; width: 200px; position: relative; }
         .cal-v-left { position: absolute; left: 0; top: -30px; width: 2px; height: 60px; background: #fff; }
         .cal-v-right { position: absolute; right: 0; top: -30px; width: 3px; height: 60px; background: var(--accent); }
@@ -28,16 +27,19 @@
         
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
-        .handle { width: 20px; height: 20px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
-        #move-handle { top: -10px; left: -10px; background: #fff; }
-        #resize-handle { bottom: -10px; right: -10px; background: var(--accent); }
+        .handle { width: 30px; height: 30px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
+        #move-handle { top: -15px; left: -15px; background: #fff; }
+        #resize-handle { bottom: -15px; right: -15px; background: var(--accent); }
         .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: var(--bg); padding: 0 5px; white-space: nowrap; }
         .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 130px; text-align: center; background: var(--bg); }
         
         #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; }
-        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 45px; text-align: center; }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 55px; text-align: center; }
         .f-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; }
         .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; color: #000; }
+        .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 14px; }
+        .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
+        .adj-btn { background: #333; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -54,8 +56,14 @@
     </div>
 
     <div id="register-screen" style="text-align:center;">
-        <h3 style="color:var(--accent)">Kalibrálás</h3>
-        <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Húzd a zöld vonalat a tárgy széléhez!</p>
+        <h3 style="color:var(--accent); margin-bottom:15px;">Kalibrálás</h3>
+        
+        <div style="display: flex; gap: 10px; width: 300px; margin: 0 auto 15px;">
+            <button id="btn-card" class="cal-type-btn active" onclick="setCalType('card')">Személyi</button>
+            <button id="btn-cash" class="cal-type-btn" onclick="setCalType('cash')">Magyar papírpénz</button>
+        </div>
+
+        <p id="cal-instruction" style="font-size:13px; color:#aaa; height: 40px; padding: 0 20px;">Helyezze a kártyát a vonalra, ha a határvonalak jól láthatóak -> Mentés</p>
         
         <div id="cal-area">
             <div id="cal-main-line">
@@ -65,8 +73,14 @@
             </div>
         </div>
 
-        <input type="number" id="calRef" class="setup-input" placeholder="Tárgy hossza (mm)" value="85.6">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">
+            <button class="adj-btn" onclick="adjCal(-1)">-</button>
+            <input type="number" id="calRef" class="setup-input" style="width: 80px; margin: 0;" value="85.6" readonly>
+            <button class="adj-btn" onclick="adjCal(1)">+</button>
+        </div>
+
         <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Tab S7 FE">
+        <br>
         <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000; margin-top:10px;">MENTÉS</button>
     </div>
 </div>
@@ -81,12 +95,12 @@
     <div id="controls">
         <span style="font-size:11px; color:#888;">Szél:</span>
         <button class="f-btn" onclick="adj('w',-0.1)">-</button>
-        <input type="number" id="m-w" class="m-input">
+        <input type="number" id="m-w" class="m-input" inputmode="decimal">
         <button class="f-btn" onclick="adj('w',0.1)">+</button>
         <span style="width:10px"></span>
         <span style="font-size:11px; color:#888;">Hosz:</span>
         <button class="f-btn" onclick="adj('h',-0.1)">-</button>
-        <input type="number" id="m-h" class="m-input">
+        <input type="number" id="m-h" class="m-input" inputmode="decimal">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
         <button onclick="setManual()" class="ok-btn">OK</button>
     </div>
@@ -97,7 +111,6 @@
     let activeAction = null;
     let startX, startW;
 
-    // KALIBRÁCIÓ JAVÍTVA
     const calMainLine = document.getElementById('cal-main-line');
     const calHandle = document.getElementById('cal-handle');
 
@@ -117,6 +130,25 @@
             document.getElementById('register-screen').style.display = 'none';
         }
     };
+
+    function setCalType(type) {
+        const refInput = document.getElementById('calRef');
+        const inst = document.getElementById('cal-instruction');
+        document.getElementById('btn-card').classList.toggle('active', type === 'card');
+        document.getElementById('btn-cash').classList.toggle('active', type === 'cash');
+
+        if(type === 'card') {
+            refInput.value = "85.6";
+            inst.innerText = "Helyezze a kártyát a vonalra, ha a határvonalak jól láthatóak -> Mentés";
+        } else {
+            refInput.value = "70.0";
+            inst.innerText = "Helyezze a papírpénzt a vonalra, ha a határvonalak jól láthatóak -> Mentés";
+        }
+    }
+
+    function adjCal(val) {
+        calMainLine.style.width = Math.max(20, calMainLine.offsetWidth + val) + "px";
+    }
 
     function showRegister() {
         document.getElementById('login-screen').style.display = 'none';
@@ -143,7 +175,6 @@
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     }
 
-    // DOBOZ MOZGATÁS (A te kódod alapján)
     const box = document.getElementById('box');
     let bStartX, bStartY, bStartW, bStartH, bStartLeft, bStartTop;
 
@@ -159,7 +190,6 @@
 
     window.addEventListener('pointermove', (e) => {
         if (!activeAction) return;
-        
         if (activeAction === 'cal') {
             const dx = e.clientX - startX;
             calMainLine.style.width = Math.max(20, startW + dx) + "px";
@@ -176,14 +206,20 @@
     window.addEventListener('pointerup', () => { activeAction = null; });
 
     function updateLabel() {
-        document.getElementById('label-w').innerText = (box.offsetWidth / ppmm).toFixed(1) + " mm";
-        document.getElementById('label-h').innerText = (box.offsetHeight / ppmm).toFixed(1) + " mm";
+        const w = (box.offsetWidth / ppmm).toFixed(1);
+        const h = (box.offsetHeight / ppmm).toFixed(1);
+        document.getElementById('label-w').innerText = w + " mm";
+        document.getElementById('label-h').innerText = h + " mm";
+        document.getElementById('m-w').value = w;
+        document.getElementById('m-h').value = h;
     }
+
     function adj(t, v) {
         if (t === 'w') box.style.width = (box.offsetWidth + (v * ppmm)) + "px";
         else box.style.height = (box.offsetHeight + (v * ppmm)) + "px";
         updateLabel();
     }
+
     function setManual() {
         const w = document.getElementById('m-w').value;
         const h = document.getElementById('m-h').value;
