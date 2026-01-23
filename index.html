@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v1.1 - Eredeti Alapú</title>
+    <title>Elite Méretező PRO v1.1</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -17,7 +16,7 @@
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
         
         #cal-area { position: relative; margin: 20px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
-        #cal-main-line { height: 2px; background: #fff; width: 200px; position: relative; }
+        #cal-main-line { height: 2px; background: #fff; width: 150px; position: relative; }
         .cal-v-left { position: absolute; left: 0; top: -30px; width: 2px; height: 60px; background: #fff; }
         .cal-v-right { position: absolute; right: 0; top: -30px; width: 3px; height: 60px; background: var(--accent); }
         
@@ -42,23 +41,24 @@
 
 <div id="overlay">
     <div id="login-screen" style="display:none; text-align: center;">
-        <div onclick="initApp()" style="background: #111; border: 2px solid var(--accent); padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; cursor: pointer;">
+        <div onclick="initApp()" style="background: #111; border: 2px solid var(--accent); padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px;">
             <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
             <div style="color:var(--accent); font-size:16px; margin-top:5px;">BELÉPÉS</div>
         </div>
+        <button onclick="showRegister()" style="background:none; border:none; color:#555; text-decoration: underline;">Javítás</button>
     </div>
 
-    <div id="register-screen" style="text-align: center;">
-        <h3 style="color:var(--accent);">Kalibrálás (54.0 mm)</h3>
+    <div id="register-screen" style="text-align:center;">
+        <h3 style="color:var(--accent);">Kalibráció</h3>
         <div id="cal-area">
             <div id="cal-main-line"><div class="cal-v-left"></div><div class="cal-v-right"></div></div>
         </div>
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
-            <button class="adj-btn" id="minus-btn">-</button>
-            <div style="font-size: 20px; font-weight: bold;">Személyi rövid oldal</div>
-            <button class="adj-btn" id="plus-btn">+</button>
+            <button class="adj-btn" onclick="adjCal(-1)">-</button>
+            <input type="number" id="calRef" class="setup-input" value="85.6" step="0.1">
+            <button class="adj-btn" onclick="adjCal(1)">+</button>
         </div>
-        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Samsung Device">
+        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve">
         <br>
         <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000; margin-top:10px;">MENTÉS</button>
     </div>
@@ -73,11 +73,11 @@
     </div>
     <div id="controls">
         <button class="f-btn" onclick="adj('w',-0.1)">-</button>
-        <input type="number" id="m-w" class="m-input" inputmode="decimal">
+        <input type="number" id="m-w" class="m-input" step="0.1">
         <button class="f-btn" onclick="adj('w',0.1)">+</button>
         <span style="width:10px"></span>
         <button class="f-btn" onclick="adj('h',-0.1)">-</button>
-        <input type="number" id="m-h" class="m-input" inputmode="decimal">
+        <input type="number" id="m-h" class="m-input" step="0.1">
         <button class="f-btn" onclick="adj('h',0.1)">+</button>
         <button onclick="setManual()" class="ok-btn">OK</button>
     </div>
@@ -85,7 +85,6 @@
 
 <script>
     let ppmm = 1, activeAction = null;
-    let holdTimer, holdInterval, speed;
 
     window.onload = () => {
         const saved = localStorage.getItem('elite_r_dev_v2');
@@ -98,22 +97,6 @@
         }
     };
 
-    // GYORSULÓ GOMBOK FUNKCIÓ
-    function setupHold(btnId, delta) {
-        const btn = document.getElementById(btnId);
-        btn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); speed = 1; adjCal(delta);
-            holdTimer = setTimeout(() => {
-                holdInterval = setInterval(() => {
-                    adjCal(delta * Math.floor(speed));
-                    if (speed < 10) speed += 0.4;
-                }, 40);
-            }, 300);
-        });
-        btn.addEventListener('touchend', () => { clearTimeout(holdTimer); clearInterval(holdInterval); });
-    }
-    setupHold('plus-btn', 1); setupHold('minus-btn', -1);
-
     function adjCal(val) { 
         const line = document.getElementById('cal-main-line');
         line.style.width = Math.max(20, line.offsetWidth + val) + "px"; 
@@ -121,9 +104,10 @@
 
     function doCalibrate() {
         const lineW = document.getElementById('cal-main-line').offsetWidth;
-        ppmm = lineW / 54.0;
+        const ref = parseFloat(document.getElementById('calRef').value);
+        ppmm = lineW / ref;
         localStorage.setItem('elite_r_dev_v2', JSON.stringify({
-            name: document.getElementById('devName').value, 
+            name: document.getElementById('devName').value || 'Device', 
             ppmm: ppmm
         }));
         location.reload();
