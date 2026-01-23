@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v9.5</title>
+    <title>Elite Méretező PRO v9.6</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -14,31 +14,25 @@
             touch-action: none !important; -webkit-user-select: none; user-select: none;
         }
         
-        /* Érintési pajzs: minden blokkolva, kivéve a gombokat */
         #overlay { 
             position: fixed; inset: 0; background: #000; z-index: 3000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             padding: 15px; touch-action: none !important;
         }
 
-        /* Csak a gombok és inputok reagáljanak */
-        .cal-type-btn, .fix-btn, .adj-btn, .final-btn, #devName, #saved-btn, .f-btn, .ok-btn, .m-input {
-            pointer-events: auto !important;
-        }
-
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 150px; margin: 5px; text-align: center; font-size: 16px; }
-        
         #cal-area { position: relative; margin: 15px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none; }
         #cal-main-line { height: 2px; background: #fff; width: 150px; position: relative; }
         .cal-v-left { position: absolute; left: 0; top: -40px; width: 2px; height: 80px; background: #fff; }
         .cal-v-right { position: absolute; right: 0; top: -40px; width: 3px; height: 80px; background: var(--accent); }
 
         #login-screen { text-align: center; }
-        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; cursor: pointer; }
+        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; }
         
-        #canvas { display: none; width: 100%; height: 100%; position: relative; touch-action: none; }
+        #canvas { display: none; width: 100%; height: 100%; position: relative; touch-action: none !important; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
         
+        /* VISSZAÁLLÍTOTT KISEBB PÖTTYÖK */
         .handle { width: 30px; height: 30px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; pointer-events: auto !important; }
         #move-handle { top: -15px; left: -15px; background: #fff; }
         #resize-handle { bottom: -15px; right: -15px; background: var(--accent); }
@@ -48,27 +42,27 @@
         
         #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.98); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; pointer-events: auto; }
         .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 60px; text-align: center; user-select: auto; }
-        .f-btn { background: #333; color: #fff; border: none; padding: 10px 14px; border-radius: 5px; font-weight: bold; }
+        .f-btn { background: #333; color: #fff; border: none; padding: 10px 14px; border-radius: 5px; font-weight: bold; touch-action: manipulation; }
         .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; color: #000; }
         
-        .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 13px; }
+        .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 13px; pointer-events: auto !important; }
         .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
-        .adj-btn { background: #333; color: white; border: 1px solid #555; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; }
-        .fix-btn { background: #222; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; width: 140px; }
+        .adj-btn { background: #333; color: white; border: 1px solid #555; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; pointer-events: auto !important; touch-action: none; }
+        .fix-btn { background: #222; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; width: 140px; pointer-events: auto !important; }
         .fix-btn.active { background: #30d15833; border-color: var(--accent); color: var(--accent); }
-        .final-btn { background: #1a1a1a; border: 1px solid #333; padding: 15px 50px; border-radius: 12px; font-weight: bold; color: #555; margin-top: 15px; pointer-events: none; width: 280px; }
-        .final-btn.ready { background: var(--accent); color: #000; border: none; pointer-events: auto; }
+        .final-btn { background: #1a1a1a; border: 1px solid #333; padding: 15px 50px; border-radius: 12px; font-weight: bold; color: #555; margin-top: 15px; width: 280px; }
+        .final-btn.ready { background: var(--accent); color: #000; border: none; pointer-events: auto !important; }
     </style>
 </head>
 <body>
 
 <div id="overlay">
     <div id="login-screen" style="display:none;">
-        <div id="saved-btn" onclick="initApp()">
+        <div id="saved-btn" onclick="initApp()" style="pointer-events: auto !important;">
             <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
             <div id="s-ppi" style="color:var(--accent); font-size:16px; margin-top:5px;">Dupla kalibráció aktív</div>
         </div>
-        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px; border-radius:8px;">Új kalibrálás</button>
+        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px; border-radius:8px; pointer-events: auto !important;">Új kalibrálás</button>
     </div>
 
     <div id="register-screen" style="text-align:center; width: 100%; max-width: 400px;">
@@ -93,7 +87,7 @@
             <input type="number" id="calRef" class="setup-input" style="width: 70px;" value="54.0" readonly>
             <button class="adj-btn" id="btn-plus">+</button>
         </div>
-        <input type="text" id="devName" class="setup-input" style="width: 250px;" placeholder="Eszköz neve" value="Samsung Eszköz">
+        <input type="text" id="devName" class="setup-input" style="width: 250px; pointer-events: auto !important;" placeholder="Eszköz neve" value="Samsung Eszköz">
         <br>
         <button id="btn-final" onclick="doCalibrate()" class="final-btn">MENTÉS ÉS INDÍTÁS</button>
     </div>
@@ -135,13 +129,12 @@
             }, 500);
         };
         const stop = (e) => { 
-            e.preventDefault(); e.stopPropagation();
+            e.preventDefault(); 
             clearTimeout(holdTimer); clearInterval(holdInterval); 
         };
         btn.addEventListener('pointerdown', start);
         btn.addEventListener('pointerup', stop);
         btn.addEventListener('pointerleave', stop);
-        btn.addEventListener('contextmenu', (e) => e.preventDefault());
     };
     setupHoldBtn('btn-plus', 1);
     setupHoldBtn('btn-minus', -1);
@@ -152,7 +145,7 @@
         if(draft.land) { temp_land = draft.land; updateUI('land'); }
         if(draft.devName) document.getElementById('devName').value = draft.devName;
 
-        const saved = localStorage.getItem('elite_r_v95');
+        const saved = localStorage.getItem('elite_r_v96');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
@@ -206,7 +199,7 @@
 
     function doCalibrate() {
         const data = { name: document.getElementById('devName').value, port: temp_port, land: temp_land };
-        localStorage.setItem('elite_r_v95', JSON.stringify(data));
+        localStorage.setItem('elite_r_v96', JSON.stringify(data));
         localStorage.removeItem('elite_draft');
         location.reload();
     }
@@ -219,7 +212,7 @@
     }
 
     function updateLabel() {
-        const saved = JSON.parse(localStorage.getItem('elite_r_v95'));
+        const saved = JSON.parse(localStorage.getItem('elite_r_v96'));
         if(!saved) return;
         const isPort = window.innerHeight > window.innerWidth;
         const ppmm = isPort ? saved.port : saved.land;
@@ -254,7 +247,7 @@
         }
         updateLabel();
     });
-    window.addEventListener('pointerup', (e) => { activeAction = null; });
+    window.addEventListener('pointerup', () => activeAction = null);
 
     function adj(t, v) {
         const ppmm = window.currentPpmm;
@@ -269,16 +262,16 @@
         if(h) box.style.height = (h * ppmm) + "px";
         updateLabel();
     }
-    function showRegister() { localStorage.removeItem('elite_r_v95'); location.reload(); }
+    function showRegister() { localStorage.removeItem('elite_r_v96'); location.reload(); }
     
-    // Szigorú blokkolás mindenre, ami nem gomb
+    // SZIGORÚ TILTÁS A FRISSÍTÉS ÉS GÖRGETÉS ELLEN MINDEN FELÜLETEN
     document.addEventListener('touchstart', (e) => {
-        if (e.target.closest('button, input, #saved-btn, .handle')) return;
+        if (e.target.closest('button, input, .handle, #saved-btn')) return;
         e.preventDefault();
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
-        if (activeAction) return; // Engedjük a doboz átméretezést
+        if (activeAction) return; 
         e.preventDefault();
     }, {passive: false});
 
