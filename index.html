@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Elite Méretező PRO v9.1</title>
+    <title>Elite Méretező PRO v9.2</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -38,7 +38,6 @@
         
         .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 13px; }
         .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
-        .cal-type-btn.done { border-color: var(--accent); color: var(--accent); }
 
         .adj-btn { background: #333; color: white; border: 1px solid #555; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
@@ -122,7 +121,7 @@
 </div>
 
 <script>
-    let ppi_port = null, ppi_land = null;
+    let temp_port = null, temp_land = null;
     let curObj = 'card', curOrient = null;
     let holdTimer, holdInterval, speed = 1;
     const calMainLine = document.getElementById('cal-main-line');
@@ -146,13 +145,20 @@
     setupHoldBtn('btn-minus', -1);
 
     window.onload = () => {
-        const saved = localStorage.getItem('elite_r_v91');
+        // Visszatöltés frissítés esetén
+        const draft = JSON.parse(localStorage.getItem('elite_draft') || '{}');
+        if(draft.port) { temp_port = draft.port; updateUI('port'); }
+        if(draft.land) { temp_land = draft.land; updateUI('land'); }
+        if(draft.devName) document.getElementById('devName').value = draft.devName;
+
+        const saved = localStorage.getItem('elite_r_v92');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('register-screen').style.display = 'none';
         }
+        checkReady();
     };
 
     function setObj(obj) {
@@ -174,26 +180,28 @@
     }
 
     function lockValue(orient) {
-        if(curOrient !== orient) {
-            alert("Előbb válaszd ki ezt a módot a fenti gombbal!");
-            return;
-        }
+        if(curOrient !== orient) { alert("Válaszd ki az irányt a gombbal!"); return; }
         const ppi = calMainLine.offsetWidth / parseFloat(document.getElementById('calRef').value);
-        const fixBtn = document.getElementById('fix-' + orient);
         
-        if(orient === 'port') {
-            ppi_port = ppi;
-            fixBtn.innerText = "RÖGZÍTVE (1/1)";
-        } else {
-            ppi_land = ppi;
-            fixBtn.innerText = "RÖGZÍTVE (2/1)";
-        }
-        fixBtn.classList.add('active');
+        const draft = JSON.parse(localStorage.getItem('elite_draft') || '{}');
+        if(orient === 'port') { temp_port = ppi; draft.port = ppi; }
+        else { temp_land = ppi; draft.land = ppi; }
+        
+        draft.devName = document.getElementById('devName').value;
+        localStorage.setItem('elite_draft', JSON.stringify(draft));
+        
+        updateUI(orient);
         checkReady();
     }
 
+    function updateUI(orient) {
+        const fixBtn = document.getElementById('fix-' + orient);
+        fixBtn.innerText = orient === 'port' ? "RÖGZÍTVE (1/1)" : "RÖGZÍTVE (2/1)";
+        fixBtn.classList.add('active');
+    }
+
     function checkReady() {
-        if(ppi_port && ppi_land) {
+        if(temp_port && temp_land) {
             const final = document.getElementById('btn-final');
             final.classList.add('ready');
             final.innerText = "MENTÉS ÉS INDÍTÁS (2/2)";
@@ -201,8 +209,9 @@
     }
 
     function doCalibrate() {
-        const data = { name: document.getElementById('devName').value, port: ppi_port, land: ppi_land };
-        localStorage.setItem('elite_r_v91', JSON.stringify(data));
+        const data = { name: document.getElementById('devName').value, port: temp_port, land: temp_land };
+        localStorage.setItem('elite_r_v92', JSON.stringify(data));
+        localStorage.removeItem('elite_draft'); // Töröljük a vázlatot
         location.reload();
     }
 
@@ -214,7 +223,7 @@
     }
 
     function updateLabel() {
-        const saved = JSON.parse(localStorage.getItem('elite_r_v91'));
+        const saved = JSON.parse(localStorage.getItem('elite_r_v92'));
         const isPort = window.innerHeight > window.innerWidth;
         const ppmm = isPort ? saved.port : saved.land;
         window.currentPpmm = ppmm;
@@ -227,7 +236,6 @@
         document.getElementById('m-h').value = h;
     }
 
-    // Mozgatás
     let activeAction = null, bStartX, bStartY, bStartW, bStartH, bStartLeft, bStartTop;
     const box = document.getElementById('box');
     const handleStart = (e, type) => {
@@ -264,7 +272,7 @@
         if(h) box.style.height = (h * ppmm) + "px";
         updateLabel();
     }
-    function showRegister() { localStorage.removeItem('elite_r_v91'); location.reload(); }
+    function showRegister() { localStorage.removeItem('elite_r_v92'); location.reload(); }
     window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 </script>
 </body>
