@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Méretező PRO v1.1 - Final Fixed</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Elite Méretező PRO v1.1 - Eredeti Alapú</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
@@ -16,13 +17,12 @@
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
         
         #cal-area { position: relative; margin: 20px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
-        #cal-main-line { height: 2px; background: #fff; width: 150px; position: relative; }
+        #cal-main-line { height: 2px; background: #fff; width: 200px; position: relative; }
         .cal-v-left { position: absolute; left: 0; top: -30px; width: 2px; height: 60px; background: #fff; }
         .cal-v-right { position: absolute; right: 0; top: -30px; width: 3px; height: 60px; background: var(--accent); }
         
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; }
-        
         .handle { width: 30px; height: 30px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
         #move-handle { top: -15px; left: -15px; background: #fff; }
         #resize-handle { bottom: -15px; right: -15px; background: var(--accent); }
@@ -33,10 +33,7 @@
         .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 55px; text-align: center; }
         .f-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; }
         .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; color: #000; }
-        
         .adj-btn { background: #333; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; }
-        .fix-btn { background: #111; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; width: 140px; margin: 5px; font-size: 12px; font-weight: bold; }
-        .fix-btn.active { border-color: var(--accent); color: var(--accent); background: var(--box-bg); }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -45,30 +42,25 @@
 
 <div id="overlay">
     <div id="login-screen" style="display:none; text-align: center;">
-        <div onclick="initApp()" style="background: #111; border: 2px solid var(--accent); padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px;">
+        <div onclick="initApp()" style="background: #111; border: 2px solid var(--accent); padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; cursor: pointer;">
             <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
             <div style="color:var(--accent); font-size:16px; margin-top:5px;">BELÉPÉS</div>
         </div>
-        <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px; border-radius:8px;">Új kalibrálás</button>
     </div>
 
-    <div id="register-screen" style="text-align:center;">
-        <h3 style="color:var(--accent); margin-bottom:15px;">Személyi rövid oldal (54.0mm)</h3>
+    <div id="register-screen" style="text-align: center;">
+        <h3 style="color:var(--accent);">Kalibrálás (54.0 mm)</h3>
         <div id="cal-area">
             <div id="cal-main-line"><div class="cal-v-left"></div><div class="cal-v-right"></div></div>
         </div>
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
             <button class="adj-btn" id="minus-btn">-</button>
-            <div style="font-size: 20px; font-weight: bold;">54.0 mm</div>
+            <div style="font-size: 20px; font-weight: bold;">Személyi rövid oldal</div>
             <button class="adj-btn" id="plus-btn">+</button>
-        </div>
-        <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 10px;">
-            <button id="fix-port" class="fix-btn" onclick="lockValue('port')">RÖGZÍT: ÁLLÓ</button>
-            <button id="fix-land" class="fix-btn" onclick="lockValue('land')">RÖGZÍT: FEKVŐ</button>
         </div>
         <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Samsung Device">
         <br>
-        <button id="main-save-btn" onclick="doCalibrate()" style="background:#222; border:1px solid #444; padding:15px 40px; border-radius:10px; font-weight:bold; color:#555; margin-top:10px;">MENTÉS</button>
+        <button onclick="doCalibrate()" style="background:var(--accent); border:none; padding:15px 40px; border-radius:10px; font-weight:bold; color:#000; margin-top:10px;">MENTÉS</button>
     </div>
 </div>
 
@@ -92,20 +84,21 @@
 </div>
 
 <script>
-    let activeAction = null, temp_port = null, temp_land = null;
+    let ppmm = 1, activeAction = null;
     let holdTimer, holdInterval, speed;
-    const storageKey = 'elite_r_dev_v2';
 
     window.onload = () => {
-        const saved = localStorage.getItem(storageKey);
+        const saved = localStorage.getItem('elite_r_dev_v2');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('register-screen').style.display = 'none';
+            ppmm = d.ppmm;
         }
     };
 
+    // GYORSULÓ GOMBOK FUNKCIÓ
     function setupHold(btnId, delta) {
         const btn = document.getElementById(btnId);
         btn.addEventListener('touchstart', (e) => {
@@ -126,17 +119,13 @@
         line.style.width = Math.max(20, line.offsetWidth + val) + "px"; 
     }
 
-    function lockValue(o) {
-        const val = document.getElementById('cal-main-line').offsetWidth / 54.0;
-        if(o === 'port') temp_port = val; else temp_land = val;
-        const btn = document.getElementById('fix-' + o);
-        btn.classList.add('active'); btn.innerText = (o==='port'?'ÁLLÓ':'FEKVŐ') + " OK";
-        if(temp_port && temp_land) document.getElementById('main-save-btn').style.color = "var(--accent)";
-    }
-
     function doCalibrate() {
-        if(!temp_port || !temp_land) return;
-        localStorage.setItem(storageKey, JSON.stringify({name: document.getElementById('devName').value, port: temp_port, land: temp_land}));
+        const lineW = document.getElementById('cal-main-line').offsetWidth;
+        ppmm = lineW / 54.0;
+        localStorage.setItem('elite_r_dev_v2', JSON.stringify({
+            name: document.getElementById('devName').value, 
+            ppmm: ppmm
+        }));
         location.reload();
     }
 
@@ -176,31 +165,24 @@
     window.onpointerup = () => activeAction = null;
 
     function updateLabel() {
-        const saved = JSON.parse(localStorage.getItem(storageKey));
-        if(!saved) return;
-        const ppmm = window.innerHeight > window.innerWidth ? saved.port : saved.land;
         document.getElementById('label-w').innerText = (box.offsetWidth / ppmm).toFixed(1) + " mm";
         document.getElementById('label-h').innerText = (box.offsetHeight / ppmm).toFixed(1) + " mm";
+        document.getElementById('m-w').value = (box.offsetWidth / ppmm).toFixed(1);
+        document.getElementById('m-h').value = (box.offsetHeight / ppmm).toFixed(1);
     }
 
     function adj(t, v) {
-        const saved = JSON.parse(localStorage.getItem(storageKey));
-        const ppmm = window.innerHeight > window.innerWidth ? saved.port : saved.land;
         if (t === 'w') box.style.width = (box.offsetWidth + (v * ppmm)) + "px";
         else box.style.height = (box.offsetHeight + (v * ppmm)) + "px";
         updateLabel();
     }
 
     function setManual() {
-        const saved = JSON.parse(localStorage.getItem(storageKey));
-        const ppmm = window.innerHeight > window.innerWidth ? saved.port : saved.land;
         const w = document.getElementById('m-w').value, h = document.getElementById('m-h').value;
         if(w) box.style.width = (w * ppmm) + "px";
         if(h) box.style.height = (h * ppmm) + "px";
         updateLabel();
     }
-
-    function showRegister() { localStorage.removeItem(storageKey); location.reload(); }
 
     window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
 </script>
