@@ -3,40 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Méretező PRO v1.6</title>
+    <title>Elite Méretező PRO v1.7</title>
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
+        
+        /* TELJES FRISSÍTÉSGÁTLÁS ÉS RÖGZÍTÉS */
+        * { touch-action: none; -webkit-user-select: none; user-select: none; }
         html, body { 
-            overscroll-behavior: none; overflow: hidden;
+            overscroll-behavior: none !important; 
+            overflow: hidden !important;
             position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
-            background: var(--bg); color: #fff; font-family: sans-serif; touch-action: none;
+            background: var(--bg); color: #fff; font-family: sans-serif;
         }
+
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        /* Gombok */
         .btn-main { background: #222; color: #fff; border: 1px solid #444; padding: 18px; border-radius: 12px; width: 260px; margin: 8px; font-size: 16px; font-weight: bold; }
         .btn-main.active { border-color: var(--accent); background: var(--box-bg); color: var(--accent); }
-        .btn-adj { background: #333; color: white; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 35px; display: flex; align-items: center; justify-content: center; touch-action: none; }
+        .btn-adj { background: #333; color: white; border: none; width: 85px; height: 85px; border-radius: 50%; font-size: 40px; display: flex; align-items: center; justify-content: center; }
         .btn-ready { background: var(--accent); color: #000; border: none; padding: 20px 60px; border-radius: 15px; font-weight: bold; font-size: 18px; }
         .input-name { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 10px; width: 240px; margin: 15px; text-align: center; font-size: 18px; }
 
-        /* Kalibrációs grafika */
-        #cal-display { position: relative; margin: 50px 0; height: 120px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none; }
+        #cal-display { position: relative; margin: 60px 0; height: 120px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none; }
         #cal-line { height: 2px; background: #fff; width: 200px; position: relative; }
-        .v-edge { position: absolute; top: -45px; width: 2px; height: 90px; background: #fff; }
-        .v-edge.right { right: 0; background: var(--accent); width: 3px; }
+        .v-edge { position: absolute; top: -50px; width: 2px; height: 100px; background: #fff; }
+        .v-edge.right { right: 0; background: var(--accent); width: 4px; }
 
-        /* Munkaterület */
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); }
-        .handle { width: 36px; height: 36px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
-        #h-move { top: -18px; left: -18px; background: #fff; }
-        #h-res { bottom: -18px; right: -18px; background: var(--accent); }
-        .lbl-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-weight: bold; color: var(--accent); background: #000; padding: 0 5px; white-space: nowrap; }
-        .lbl-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-weight: bold; color: var(--accent); width: 130px; text-align: center; background: #000; }
+        .handle { width: 40px; height: 40px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
+        #h-move { top: -20px; left: -20px; background: #fff; }
+        #h-res { bottom: -20px; right: -20px; background: var(--accent); }
         
-        #ctrl { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(20,20,20,0.95); padding: 12px; border-radius: 15px; border: 1px solid #444; align-items: center; z-index: 100; }
-        .m-in { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 60px; text-align: center; font-size: 16px; }
+        .lbl-w { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-weight: bold; color: var(--accent); background: #000; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+        .lbl-h { position: absolute; left: -85px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-weight: bold; color: var(--accent); width: 140px; text-align: center; background: #000; padding: 2px 0; border-radius: 4px; }
+        
+        #ctrl { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(20,20,20,0.98); padding: 15px; border-radius: 18px; border: 1px solid #444; align-items: center; z-index: 100; }
+        .m-in { background: #000; border: 1px solid #555; color: #fff; padding: 10px; border-radius: 6px; width: 65px; text-align: center; font-size: 16px; }
         
         .dead { pointer-events: none; }
         .live { pointer-events: auto; }
@@ -46,27 +49,28 @@
 
 <div id="overlay">
     <div id="ui-login" style="display:none; text-align:center;">
-        <div onclick="launch()" style="background: #111; border: 2px solid var(--accent); padding: 30px; border-radius: 20px; width: 280px; margin-bottom: 25px; cursor: pointer;">
-            <div id="disp-name" style="font-size:24px; font-weight:bold;"></div>
-            <div style="color:var(--accent); margin-top:10px;">BELÉPÉS</div>
+        <div onclick="launch()" style="background: #111; border: 2px solid var(--accent); padding: 40px; border-radius: 25px; width: 300px; margin-bottom: 30px; cursor: pointer;">
+            <div id="disp-name" style="font-size:26px; font-weight:bold; letter-spacing: 1px;"></div>
+            <div style="color:var(--accent); margin-top:15px; font-weight: bold;">BELÉPÉS</div>
         </div>
-        <button onclick="reset()" style="background:none; border:none; color:#666; text-decoration:underline;">Minden törlése / Újrakalibrálás</button>
+        <button onclick="reset()" style="background:none; border:none; color:#555; text-decoration:underline;">Újrakalibrálás</button>
     </div>
 
     <div id="ui-reg" style="text-align:center;">
         <div id="pane-1">
-            <h3 style="color:var(--accent);">1. Válassz tárgyat</h3>
+            <h2 style="color:var(--accent); margin-bottom: 20px;">Elite Setup</h2>
             <button id="b-card" class="btn-main" onclick="saveP('obj','card')">Személyi igazolvány</button><br>
             <button id="b-cash" class="btn-main" onclick="saveP('obj','cash')">Magyar papírpénz</button>
             
-            <h3 style="color:var(--accent); margin-top:30px;">2. Irány rögzítése</h3>
-            <button id="b-port" class="btn-main" style="width:125px" onclick="goAdj('port')">Álló</button>
-            <button id="b-land" class="btn-main" style="width:125px" onclick="goAdj('land')">Fekvő</button>
+            <div style="height: 30px;"></div>
+            
+            <button id="b-port" class="btn-main" style="width:125px" onclick="goAdj('port')">ÁLLÓ</button>
+            <button id="b-land" class="btn-main" style="width:125px" onclick="goAdj('land')">FEKVŐ</button>
             
             <div id="pane-finish" style="margin-top:30px; display:none;">
-                <input type="text" id="in-name" class="input-name" placeholder="Eszköz neve (pl. Note20)">
+                <input type="text" id="in-name" class="input-name" placeholder="Eszköz neve">
                 <br>
-                <button onclick="finishReg()" class="btn-ready">MENTÉS</button>
+                <button onclick="finishReg()" class="btn-ready">MENTÉS ÉS INDÍTÁS</button>
             </div>
         </div>
 
@@ -78,9 +82,9 @@
                     <div class="v-edge right"></div>
                 </div>
             </div>
-            <div style="display: flex; gap: 30px; justify-content: center; margin-top: 50px;" class="live">
+            <div style="display: flex; gap: 40px; justify-content: center; margin-top: 50px;" class="live">
                 <button id="btn-minus" class="btn-adj">-</button>
-                <button onclick="doneAdj()" class="btn-ready">KÉSZ!</button>
+                <button onclick="doneAdj()" class="btn-ready">KÉSZ</button>
                 <button id="btn-plus" class="btn-adj">+</button>
             </div>
         </div>
@@ -95,47 +99,50 @@
         <div id="h-res" class="handle"></div>
     </div>
     <div id="ctrl">
-        <button class="btn-main" style="width:40px; padding:8px;" onclick="step('w',-0.1)">-</button>
         <input type="number" id="in-w" class="m-in" inputmode="decimal">
-        <button class="btn-main" style="width:40px; padding:8px;" onclick="step('w',0.1)">+</button>
-        <div style="width:15px"></div>
-        <button class="btn-main" style="width:40px; padding:8px;" onclick="step('h',-0.1)">-</button>
+        <span style="color:#555">W</span>
+        <div style="width:20px"></div>
         <input type="number" id="in-h" class="m-in" inputmode="decimal">
-        <button class="btn-main" style="width:40px; padding:8px;" onclick="step('h',0.1)">+</button>
-        <button onclick="applyIn()" class="btn-ready" style="padding:10px 15px; font-size:14px; width:auto; margin:0 0 0 10px;">OK</button>
+        <span style="color:#555">H</span>
+        <button onclick="applyIn()" class="btn-ready" style="padding:12px 20px; font-size:14px; width:auto; margin-left:15px;">OK</button>
     </div>
 </div>
 
 <script>
     let activeAct = null, hT, hI, spd = 1;
 
+    // LEHÚZÁS ELLENI VÉDELEM JS SZINTEN
+    document.addEventListener('touchmove', (e) => {
+        if (e.scale !== 1) e.preventDefault(); 
+    }, { passive: false });
+
     window.onload = () => {
-        const final = localStorage.getItem('E_V16_FINAL');
+        const final = localStorage.getItem('E_V17_FINAL');
         if(final) {
             document.getElementById('disp-name').innerText = JSON.parse(final).name;
             document.getElementById('ui-login').style.display = 'block';
             document.getElementById('ui-reg').style.display = 'none';
         } else {
-            if(!localStorage.getItem('E_V16_PRE')) {
-                localStorage.setItem('E_V16_PRE', JSON.stringify({obj:'card', port:null, land:null}));
+            if(!localStorage.getItem('E_V17_PRE')) {
+                localStorage.setItem('E_V17_PRE', JSON.stringify({obj:'card', port:null, land:null}));
             }
             syncUI();
         }
     };
 
     function saveP(k, v) {
-        let p = JSON.parse(localStorage.getItem('E_V16_PRE'));
+        let p = JSON.parse(localStorage.getItem('E_V17_PRE'));
         p[k] = v;
-        localStorage.setItem('E_V16_PRE', JSON.stringify(p));
+        localStorage.setItem('E_V17_PRE', JSON.stringify(p));
         syncUI();
     }
 
     function syncUI() {
-        const p = JSON.parse(localStorage.getItem('E_V16_PRE'));
+        const p = JSON.parse(localStorage.getItem('E_V17_PRE'));
         document.getElementById('b-card').classList.toggle('active', p.obj === 'card');
         document.getElementById('b-cash').classList.toggle('active', p.obj === 'cash');
-        if(p.port) { document.getElementById('b-port').style.borderColor = "var(--accent)"; document.getElementById('b-port').innerText = "Álló OK"; }
-        if(p.land) { document.getElementById('b-land').style.borderColor = "var(--accent)"; document.getElementById('b-land').innerText = "Fekvő OK"; }
+        if(p.port) { document.getElementById('b-port').style.borderColor = "var(--accent)"; document.getElementById('b-port').innerText = "ÁLLÓ OK"; }
+        if(p.land) { document.getElementById('b-land').style.borderColor = "var(--accent)"; document.getElementById('b-land').innerText = "FEKVŐ OK"; }
         if(p.port && p.land) document.getElementById('pane-finish').style.display = 'block';
     }
 
@@ -147,7 +154,7 @@
     }
 
     function doneAdj() {
-        const p = JSON.parse(localStorage.getItem('E_V16_PRE'));
+        const p = JSON.parse(localStorage.getItem('E_V17_PRE'));
         const ref = p.obj === 'card' ? 85.6 : 70.0;
         const val = document.getElementById('cal-line').offsetWidth / ref;
         saveP(p.mode, val);
@@ -157,10 +164,10 @@
     }
 
     function finishReg() {
-        const p = JSON.parse(localStorage.getItem('E_V16_PRE'));
-        const n = document.getElementById('in-name').value || "Eszköz";
-        localStorage.setItem('E_V16_FINAL', JSON.stringify({name:n, port:p.port, land:p.land}));
-        localStorage.removeItem('E_V16_PRE');
+        const p = JSON.parse(localStorage.getItem('E_V17_PRE'));
+        const n = document.getElementById('in-name').value || "Elite Device";
+        localStorage.setItem('E_V17_FINAL', JSON.stringify({name:n, port:p.port, land:p.land}));
+        localStorage.removeItem('E_V17_PRE');
         location.reload();
     }
 
@@ -174,9 +181,9 @@
             hT = setTimeout(() => {
                 hI = setInterval(() => {
                     l.style.width = (l.offsetWidth + (d * Math.floor(spd))) + "px";
-                    if(spd < 12) spd += 0.4;
-                }, 50);
-            }, 300);
+                    if(spd < 15) spd += 0.5;
+                }, 40);
+            }, 250);
         };
         const stop = () => { clearTimeout(hT); clearInterval(hI); };
         b.addEventListener('touchstart', start); b.addEventListener('touchend', stop);
@@ -204,15 +211,20 @@
 
     window.addEventListener('pointermove', (e) => {
         if(!activeAct) return;
-        if(activeAct === 'm') { box.style.left = (sL + (e.clientX - sX)) + "px"; box.style.top = (sT + (e.clientY - sY)) + "px"; }
-        else { box.style.width = Math.max(30, sW + (e.clientX - sX)) + "px"; box.style.height = Math.max(30, sH + (e.clientY - sY)) + "px"; }
+        if(activeAct === 'm') { 
+            box.style.left = (sL + (e.clientX - sX)) + "px"; 
+            box.style.top = (sT + (e.clientY - sY)) + "px"; 
+        } else { 
+            box.style.width = Math.max(30, sW + (e.clientX - sX)) + "px"; 
+            box.style.height = Math.max(30, sH + (e.clientY - sY)) + "px"; 
+        }
         redraw();
     });
 
     window.addEventListener('pointerup', () => activeAct = null);
 
     function redraw() {
-        const d = JSON.parse(localStorage.getItem('E_V16_FINAL'));
+        const d = JSON.parse(localStorage.getItem('E_V17_FINAL'));
         if(!d) return;
         let ppmm = (window.innerHeight > window.innerWidth) ? d.port : d.land;
         const w = (box.offsetWidth / ppmm).toFixed(1);
@@ -223,23 +235,13 @@
         document.getElementById('in-h').value = h;
     }
 
-    function step(t, v) {
-        const d = JSON.parse(localStorage.getItem('E_V16_FINAL'));
-        let ppmm = (window.innerHeight > window.innerWidth) ? d.port : d.land;
-        if(t === 'w') box.style.width = (box.offsetWidth + (v * ppmm)) + "px";
-        else box.style.height = (box.offsetHeight + (v * ppmm)) + "px";
-        redraw();
-    }
-
     function applyIn() {
-        const d = JSON.parse(localStorage.getItem('E_V16_FINAL'));
+        const d = JSON.parse(localStorage.getItem('E_V17_FINAL'));
         let ppmm = (window.innerHeight > window.innerWidth) ? d.port : d.land;
         box.style.width = (document.getElementById('in-w').value * ppmm) + "px";
         box.style.height = (document.getElementById('in-h').value * ppmm) + "px";
         redraw();
     }
-
-    window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 </script>
 </body>
 </html>
