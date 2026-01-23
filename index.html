@@ -3,32 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Méretező PRO v10.0</title>
+    <title>Elite Méretező PRO v11.0</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
+        
+        /* ALAPVETŐ TILTÁSOK */
         html, body { 
             overscroll-behavior: none !important; overflow: hidden !important;
             position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif;
             touch-action: none; -webkit-user-select: none; user-select: none;
         }
+
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
         #canvas { display: none; width: 100%; height: 100%; position: relative; }
-        .handle { width: 32px !important; height: 32px !important; border-radius: 50%; position: absolute; z-index: 100; border: 2px solid #000; pointer-events: auto !important; }
+
+        /* PÖTTYÖK - SAMSUNG OPTIMALIZÁLT */
+        .handle { 
+            width: 32px !important; height: 32px !important; 
+            border-radius: 50%; position: absolute; z-index: 100; border: 2px solid #000; 
+            pointer-events: auto !important; touch-action: none !important;
+        }
         #move-handle { top: -16px; left: -16px; background: #fff; }
         #resize-handle { bottom: -16px; right: -16px; background: var(--accent); }
+
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.1); box-sizing: border-box; }
+
+        /* KALIBRÁCIÓS FELÜLET */
         .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 12px; border-radius: 8px; flex: 1; pointer-events: auto !important; }
         .cal-type-btn.active { border-color: var(--accent); background: rgba(48, 209, 88, 0.2); }
-        .adj-btn { background: #333; color: white; border: 1px solid #555; width: 65px; height: 65px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; pointer-events: auto !important; touch-action: manipulation; }
+        
+        .adj-btn { 
+            background: #333; color: white; border: 1px solid #555; 
+            width: 70px; height: 70px; border-radius: 50%; font-size: 32px; 
+            display: flex; align-items: center; justify-content: center; 
+            pointer-events: auto !important; touch-action: manipulation;
+        }
+
         .fix-btn { background: #222; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; width: 140px; margin: 5px; pointer-events: auto !important; }
-        .fix-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(48, 209, 88, 0.2); }
+        .fix-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(48, 209, 88, 0.2); font-weight: bold; }
+
         #cal-area { height: 100px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; pointer-events: none; margin: 15px 0; }
         #cal-main-line { height: 2px; background: #fff; width: 150px; position: relative; }
         .cal-v-left, .cal-v-right { position: absolute; top: -40px; width: 2px; height: 80px; background: #fff; }
         .cal-v-right { right: 0; background: var(--accent); width: 3px; }
-        #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.95); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; pointer-events: auto !important; }
+
+        /* KEZELŐPANEL */
+        #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.95); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; pointer-events: auto !important; z-index: 4000; }
         .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 55px; text-align: center; font-size: 16px; }
+        .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; color: #000; margin-left: 5px; pointer-events: auto !important; }
+
         .final-btn { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 12px; width: 280px; color: #555; font-weight: bold; margin-top: 15px; pointer-events: auto !important; }
         .final-btn.ready { background: var(--accent); color: #000; border: none; }
     </style>
@@ -37,7 +61,7 @@
 
 <div id="overlay">
     <div id="login-screen" style="display:none; text-align: center;">
-        <div id="saved-btn" style="background:#111; border:2px solid var(--accent); padding:25px; border-radius:15px; margin-bottom:20px;" onclick="initApp()">
+        <div id="saved-btn" style="background:#111; border:2px solid var(--accent); padding:25px; border-radius:15px; margin-bottom:20px; cursor: pointer;" onclick="initApp()">
             <div id="s-name" style="font-size:22px; font-weight:bold;"></div>
             <div style="color:var(--accent)">Kalibráció betöltése</div>
         </div>
@@ -45,7 +69,7 @@
     </div>
 
     <div id="register-screen" style="text-align:center; width: 100%; max-width: 360px;">
-        <h3 style="color:var(--accent); margin-bottom:10px;">Kalibrálás</h3>
+        <h3 style="color:var(--accent)">Kalibrálás (Álló & Fekvő)</h3>
         <div style="display:flex; gap:10px; margin-bottom:10px;">
             <button id="btn-card" class="cal-type-btn active" onclick="setObj('card')">Kártya (54)</button>
             <button id="btn-cash" class="cal-type-btn" onclick="setObj('cash')">Pénz (70)</button>
@@ -55,24 +79,38 @@
             <button id="btn-land" class="cal-type-btn" onclick="setOrient('land')">FEKVŐ mód</button>
         </div>
         <div id="cal-area"><div id="cal-main-line"><div class="cal-v-left"></div><div class="cal-v-right"></div></div></div>
-        <div style="display:flex; align-items:center; justify-content:center; gap:30px; margin-bottom:15px;">
-            <button class="adj-btn" id="btn-minus" style="pointer-events: auto !important;">-</button>
-            <input type="number" id="calRef" style="background:none; border:none; color:#fff; width:60px; text-align:center; font-size:20px; font-weight:bold;" value="54.0" readonly>
-            <button class="adj-btn" id="btn-plus" style="pointer-events: auto !important;">+</button>
+        <div style="display:flex; align-items:center; justify-content:center; gap:25px; margin-bottom:15px;">
+            <button class="adj-btn" id="btn-minus">-</button>
+            <input type="number" id="calRef" style="background:none; border:none; color:#fff; width:70px; text-align:center; font-size:20px; font-weight:bold;" value="54.0" readonly>
+            <button class="adj-btn" id="btn-plus">+</button>
         </div>
         <div style="display:flex; justify-content:center; gap:10px;">
             <button id="fix-port" class="fix-btn" onclick="lockValue('port')">RÖGZÍT (ÁLLÓ)</button>
             <button id="fix-land" class="fix-btn" onclick="lockValue('land')">RÖGZÍT (FEKVŐ)</button>
         </div>
-        <input type="text" id="devName" style="background:#111; border:1px solid #444; color:#fff; padding:10px; border-radius:8px; margin-top:15px; width:220px;" value="Samsung Készülék">
+        <input type="text" id="devName" style="background:#111; border:1px solid #444; color:#fff; padding:10px; border-radius:8px; margin-top:15px; width:220px;" value="Samsung Eszköz">
         <br>
         <button id="btn-final" class="final-btn" onclick="doCalibrate()">MENTÉS ÉS INDÍTÁS</button>
     </div>
 </div>
 
 <div id="canvas">
-    <div id="box"><div id="move-handle" class="handle"></div><div id="resize-handle" class="handle"></div><div id="label-w" style="position:absolute; top:-25px; left:50%; transform:translateX(-50%); color:var(--accent); font-weight:bold;"></div><div id="label-h" style="position:absolute; left:-80px; top:50%; transform:translateY(-50%) rotate(-90deg); color:var(--accent); font-weight:bold; width:140px; text-align:center;"></div></div>
-    <div id="controls"><button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('w',-0.1)">-</button><input type="number" id="m-w" class="m-input" inputmode="decimal"><button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('w',0.1)">+</button><span style="width:10px"></span><button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('h',-0.1)">-</button><input type="number" id="m-h" class="m-input" inputmode="decimal"><button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('h',0.1)">+</button><button onclick="setManual()" style="background:var(--accent); border:none; padding:10px 15px; border-radius:8px; font-weight:bold; color:#000; margin-left:5px;">OK</button></div>
+    <div id="box">
+        <div id="move-handle" class="handle"></div>
+        <div id="resize-handle" class="handle"></div>
+        <div id="label-w" style="position:absolute; top:-25px; left:50%; transform:translateX(-50%); color:var(--accent); font-weight:bold; white-space:nowrap;"></div>
+        <div id="label-h" style="position:absolute; left:-85px; top:50%; transform:translateY(-50%) rotate(-90deg); color:var(--accent); font-weight:bold; width:150px; text-align:center;"></div>
+    </div>
+    <div id="controls">
+        <button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('w',-0.1)">-</button>
+        <input type="number" id="m-w" class="m-input" inputmode="decimal">
+        <button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('w',0.1)">+</button>
+        <span style="width:10px"></span>
+        <button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('h',-0.1)">-</button>
+        <input type="number" id="m-h" class="m-input" inputmode="decimal">
+        <button class="adj-btn" style="width:45px; height:45px; font-size:20px;" onclick="adj('h',0.1)">+</button>
+        <button onclick="setManual()" class="ok-btn">OK</button>
+    </div>
 </div>
 
 <script>
@@ -80,7 +118,7 @@
     let holdTimer, holdInterval, speed = 1;
     const calLine = document.getElementById('cal-main-line');
 
-    // FRISSÍTÉS TILTÁSA - JAVÍTVA
+    // MUNKATERÜLET FRISSÍTÉS ÉS GÖRGETÉS TILTÁSA
     document.addEventListener('touchstart', e => { 
         if (e.target.closest('button, input, .handle, #saved-btn, .adj-btn')) return;
         e.preventDefault(); 
@@ -88,11 +126,12 @@
     document.addEventListener('touchmove', e => { if (!window.activeAction) e.preventDefault(); }, {passive: false});
 
     window.onload = () => {
-        const draft = JSON.parse(localStorage.getItem('elite_draft_v10') || '{}');
+        // Piszkozat (Draft) visszatöltése
+        const draft = JSON.parse(localStorage.getItem('elite_draft_v11') || '{}');
         if(draft.port) { temp_port = draft.port; updateUI('port'); }
         if(draft.land) { temp_land = draft.land; updateUI('land'); }
         
-        const saved = localStorage.getItem('elite_v10');
+        const saved = localStorage.getItem('elite_v11');
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
@@ -117,12 +156,12 @@
     function adjCal(v) { calLine.style.width = Math.max(10, calLine.offsetWidth + v) + "px"; }
 
     function lockValue(o) {
-        if(curOrient !== o) { alert("Válaszd ki az irányt (ÁLLÓ/FEKVŐ)!"); return; }
+        if(curOrient !== o) { alert("Előbb válaszd ki az irányt a gombbal!"); return; }
         const ppi = calLine.offsetWidth / parseFloat(document.getElementById('calRef').value);
-        const draft = JSON.parse(localStorage.getItem('elite_draft_v10') || '{}');
+        const draft = JSON.parse(localStorage.getItem('elite_draft_v11') || '{}');
         if(o === 'port') { temp_port = ppi; draft.port = ppi; }
         else { temp_land = ppi; draft.land = ppi; }
-        localStorage.setItem('elite_draft_v10', JSON.stringify(draft));
+        localStorage.setItem('elite_draft_v11', JSON.stringify(draft));
         updateUI(o);
         checkReady();
     }
@@ -138,9 +177,9 @@
     }
 
     function doCalibrate() {
-        if(!temp_port || !temp_land) { alert("Mindkét irányt rögzítsd!"); return; }
-        localStorage.setItem('elite_v10', JSON.stringify({ name: document.getElementById('devName').value, port: temp_port, land: temp_land }));
-        localStorage.removeItem('elite_draft_v10');
+        if(!temp_port || !temp_land) { alert("Mindkét irányt (Álló/Fekvő) rögzítsd!"); return; }
+        localStorage.setItem('elite_v11', JSON.stringify({ name: document.getElementById('devName').value, port: temp_port, land: temp_land }));
+        localStorage.removeItem('elite_draft_v11');
         location.reload();
     }
 
@@ -151,14 +190,15 @@
     }
 
     function updateLabel() {
-        const d = JSON.parse(localStorage.getItem('elite_v10'));
+        const d = JSON.parse(localStorage.getItem('elite_v11'));
+        if(!d) return;
         const ppmm = window.innerHeight > window.innerWidth ? d.port : d.land;
         window.currentPpmm = ppmm;
         document.getElementById('label-w').innerText = (document.getElementById('box').offsetWidth / ppmm).toFixed(1) + " mm";
         document.getElementById('label-h').innerText = (document.getElementById('box').offsetHeight / ppmm).toFixed(1) + " mm";
     }
 
-    // NYOMVATARTÁS FIXÁLÁSA
+    // NYOMVATARTÁS LOGIKA
     const setupBtn = (id, val) => {
         const btn = document.getElementById(id);
         const start = (e) => {
@@ -173,6 +213,7 @@
     };
     setupBtn('btn-plus', 1); setupBtn('btn-minus', -1);
 
+    // DOBOZ MOZGATÁS
     const box = document.getElementById('box');
     let bSX, bSY, bSW, bSH, bSL, bST;
     const handleStart = (e, type) => {
@@ -197,11 +238,12 @@
         updateLabel();
     }
     function setManual() {
-        box.style.width = (document.getElementById('m-w').value * window.currentPpmm) + "px";
-        box.style.height = (document.getElementById('m-h').value * window.currentPpmm) + "px";
+        const w = document.getElementById('m-w').value, h = document.getElementById('m-h').value;
+        if(w) box.style.width = (w * window.currentPpmm) + "px";
+        if(h) box.style.height = (h * window.currentPpmm) + "px";
         updateLabel();
     }
-    function showRegister() { localStorage.removeItem('elite_v10'); location.reload(); }
+    function showRegister() { localStorage.removeItem('elite_v11'); location.reload(); }
 </script>
 </body>
 </html>
