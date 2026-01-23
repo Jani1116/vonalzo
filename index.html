@@ -3,77 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Universal v1.8</title>
+    <title>Elite Universal v1.9</title>
     <style>
         :root { --accent: #30d158; --bg: #000; }
         
-        /* RADIKÁLIS FRISSÍTÉSGÁTLÁS */
-        * { touch-action: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        /* FIX RÖGZÍTÉS - LEHÚZÁS ELLENI VÉDELEM */
         html, body { 
-            overscroll-behavior: none !important; overflow: hidden !important;
-            position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
+            overscroll-behavior-y: contain !important; 
+            overflow: hidden !important;
+            position: fixed; width: 100%; height: 100%; margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif;
+            touch-action: none;
         }
 
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .btn-main { background: #222; color: #fff; border: 1px solid #444; padding: 18px; border-radius: 12px; width: 260px; margin: 8px; font-size: 16px; font-weight: bold; }
-        .btn-main.active { border-color: var(--accent); background: rgba(48, 209, 88, 0.1); color: var(--accent); }
-        .btn-adj { background: #333; color: white; border: none; width: 85px; height: 85px; border-radius: 50%; font-size: 40px; }
-        .btn-ready { background: var(--accent); color: #000; border: none; padding: 20px 60px; border-radius: 15px; font-weight: bold; font-size: 18px; }
-        .input-name { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 10px; width: 240px; margin: 15px; text-align: center; font-size: 18px; }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .btn-main { background: #222; color: #fff; border: 1px solid #444; padding: 18px; border-radius: 12px; width: 260px; margin: 8px; font-weight: bold; }
+        .btn-main.active { border-color: var(--accent); background: rgba(48,209,88,0.1); color: var(--accent); }
+        .btn-adj { background: #333; color: white; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 35px; touch-action: none; }
+        .btn-ready { background: var(--accent); color: #000; border: none; padding: 20px 60px; border-radius: 15px; font-weight: bold; }
 
-        /* KALIBRÁCIÓS VONAL */
-        #cal-display { position: relative; margin: 60px 0; height: 120px; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none; }
+        /* KALIBRÁCIÓ */
+        #cal-area { position: relative; margin: 40px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; }
         #cal-line { height: 2px; background: #fff; width: 200px; position: relative; }
-        .v-edge { position: absolute; top: -50px; width: 2px; height: 100px; background: #fff; }
-        .v-edge.right { right: 0; background: var(--accent); width: 4px; }
+        .v-edge { position: absolute; top: -40px; width: 2px; height: 80px; background: #fff; }
+        .v-edge.right { right: 0; background: var(--accent); width: 3px; }
 
-        /* MUNKATERÜLET */
-        #canvas { display: none; width: 100%; height: 100%; position: relative; }
-        #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: rgba(48, 209, 88, 0.1); }
-        .handle { width: 44px; height: 44px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; }
+        /* MUNKATERÜLET - AZ EREDETI LOGIKA ALAPJÁN */
+        #canvas { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: rgba(48,209,88,0.1); touch-action: none; }
+        .handle { width: 44px; height: 44px; border-radius: 50%; position: absolute; z-index: 100; border: 2px solid #000; touch-action: none; }
         #h-move { top: -22px; left: -22px; background: #fff; }
         #h-res { bottom: -22px; right: -22px; background: var(--accent); }
         
-        .lbl-w { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-weight: bold; color: var(--accent); background: #000; padding: 2px 10px; border-radius: 5px; white-space: nowrap; font-size: 18px; }
-        .lbl-h { position: absolute; left: -90px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-weight: bold; color: var(--accent); width: 150px; text-align: center; background: #000; font-size: 18px; }
+        .lbl { position: absolute; font-weight: bold; color: var(--accent); background: #000; padding: 2px 8px; border-radius: 4px; font-size: 16px; white-space: nowrap; }
+        #lbl-w { top: -30px; left: 50%; transform: translateX(-50%); }
+        #lbl-h { left: -80px; top: 50%; transform: translateY(-50%) rotate(-90deg); width: 120px; text-align: center; }
         
-        #ctrl { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(20,20,20,0.98); padding: 15px; border-radius: 20px; border: 1px solid #444; align-items: center; z-index: 100; }
-        .m-in { background: #000; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; width: 75px; text-align: center; font-size: 18px; }
+        #ctrl { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(20,20,20,0.95); padding: 15px; border-radius: 20px; border: 1px solid #444; z-index: 1000; }
+        .m-in { background: #000; border: 1px solid #555; color: #fff; padding: 10px; border-radius: 8px; width: 70px; text-align: center; font-size: 16px; }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
 <div id="overlay">
     <div id="ui-login" style="display:none; text-align:center;">
-        <div onclick="launch()" style="background: #111; border: 2px solid var(--accent); padding: 40px; border-radius: 25px; width: 300px; margin-bottom: 30px; cursor: pointer;">
-            <div id="disp-name" style="font-size:26px; font-weight:bold;"></div>
-            <div style="color:var(--accent); margin-top:15px; font-weight: bold;">BELÉPÉS</div>
+        <div onclick="launch()" style="border: 2px solid var(--accent); padding: 40px; border-radius: 25px; width: 280px; cursor: pointer;">
+            <div id="disp-name" style="font-size:24px; font-weight:bold;"></div>
+            <div style="color:var(--accent); margin-top:10px;">BELÉPÉS</div>
         </div>
-        <button onclick="reset()" style="background:none; border:none; color:#555; text-decoration:underline;">Újrakalibrálás</button>
+        <button onclick="reset()" style="margin-top:20px; background:none; border:none; color:#555; text-decoration:underline;">Törlés</button>
     </div>
 
     <div id="ui-reg" style="text-align:center;">
         <div id="pane-1">
-            <h2 style="color:var(--accent);">Kalibráció</h2>
-            <button id="b-card" class="btn-main" onclick="saveP('obj','card')">Személyi igazolvány</button><br>
-            <button id="b-cash" class="btn-main" onclick="saveP('obj','cash')">Magyar papírpénz</button>
-            <div style="height: 20px;"></div>
-            <button id="b-port" class="btn-main" style="width:125px" onclick="goAdj('port')">ÁLLÓ</button>
-            <button id="b-land" class="btn-main" style="width:125px" onclick="goAdj('land')">FEKVŐ</button>
-            <div id="pane-finish" style="margin-top:30px; display:none;">
-                <input type="text" id="in-name" class="input-name" placeholder="Eszköz neve">
-                <br>
-                <button onclick="finishReg()" class="btn-ready">MENTÉS</button>
+            <h3 style="color:var(--accent);">1. Tárgy</h3>
+            <button id="b-card" class="btn-main" onclick="save('obj','card')">Személyi</button><br>
+            <button id="b-cash" class="btn-main" onclick="save('obj','cash')">Pénz</button>
+            <h3 style="color:var(--accent);">2. Irány</h3>
+            <button id="b-port" class="btn-main" style="width:125px" onclick="openAdj('port')">ÁLLÓ</button>
+            <button id="b-land" class="btn-main" style="width:125px" onclick="openAdj('land')">FEKVŐ</button>
+            <div id="pane-fin" style="margin-top:20px; display:none;">
+                <input type="text" id="in-name" style="padding:15px; border-radius:10px; border:1px solid var(--accent); background:#111; color:#fff; width:240px; text-align:center;" placeholder="Név"><br>
+                <button onclick="finish()" class="btn-ready" style="margin-top:15px;">MENTÉS</button>
             </div>
         </div>
-        <div id="pane-2" style="display:none; pointer-events: none;">
-            <h3 style="color:var(--accent);" id="adj-title">Vonal beállítása</h3>
-            <div id="cal-display"><div id="cal-line"><div class="v-edge"></div><div class="v-edge right"></div></div></div>
-            <div style="display: flex; gap: 40px; justify-content: center; margin-top: 50px; pointer-events: auto;">
-                <button id="btn-minus" class="btn-adj">-</button>
-                <button onclick="doneAdj()" class="btn-ready">KÉSZ</button>
-                <button id="btn-plus" class="btn-adj">+</button>
+        <div id="pane-2" style="display:none;">
+            <h3 id="adj-title" style="color:var(--accent);">Beállítás</h3>
+            <div id="cal-area"><div id="cal-line"><div class="v-edge"></div><div class="v-edge right"></div></div></div>
+            <div style="display: flex; gap: 30px; justify-content: center;">
+                <button id="btn-m" class="btn-adj">-</button>
+                <button onclick="closeAdj()" class="btn-ready">KÉSZ</button>
+                <button id="btn-p" class="btn-adj">+</button>
             </div>
         </div>
     </div>
@@ -82,145 +83,109 @@
 <div id="canvas">
     <div id="box" style="width:150px; height:100px;">
         <div id="h-move" class="handle"></div>
-        <div id="lbl-w" class="lbl-w">0 mm</div>
-        <div id="lbl-h" class="lbl-h">0 mm</div>
+        <div id="lbl-w" class="lbl">0 mm</div>
+        <div id="lbl-h" class="lbl">0 mm</div>
         <div id="h-res" class="handle"></div>
     </div>
     <div id="ctrl">
         <input type="number" id="in-w" class="m-in" inputmode="decimal">
         <input type="number" id="in-h" class="m-in" inputmode="decimal">
-        <button onclick="applyIn()" class="btn-ready" style="padding:12px 20px; font-size:14px; width:auto;">OK</button>
+        <button onclick="apply()" class="btn-ready" style="padding:10px 20px; width:auto;">OK</button>
     </div>
 </div>
 
 <script>
-    let activeAct = null, hT, hI, spd = 1;
+    let active = null, hT, hI, spd = 1;
 
-    // LEHÚZÁS ELLENI VÉDELEM
-    window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+    // Eredeti mozgás logika visszaállítása
+    const box = document.getElementById('box'), canvas = document.getElementById('canvas');
+    let sX, sY, sW, sH, sL, sT;
 
     window.onload = () => {
-        const final = localStorage.getItem('E_V18_FINAL');
-        if(final) {
-            document.getElementById('disp-name').innerText = JSON.parse(final).name;
+        const f = localStorage.getItem('ELITE_V19');
+        if(f) {
+            document.getElementById('disp-name').innerText = JSON.parse(f).name;
             document.getElementById('ui-login').style.display = 'block';
             document.getElementById('ui-reg').style.display = 'none';
         } else {
-            if(!localStorage.getItem('E_V18_PRE')) {
-                localStorage.setItem('E_V18_PRE', JSON.stringify({obj:'card', port:null, land:null}));
-            }
-            syncUI();
+            if(!localStorage.getItem('PRE_V19')) localStorage.setItem('PRE_V19', JSON.stringify({obj:'card'}));
+            refresh();
         }
     };
 
-    function saveP(k, v) {
-        let p = JSON.parse(localStorage.getItem('E_V18_PRE'));
-        p[k] = v;
-        localStorage.setItem('E_V18_PRE', JSON.stringify(p));
-        syncUI();
+    function save(k, v) { 
+        let p = JSON.parse(localStorage.getItem('PRE_V19')); p[k] = v; 
+        localStorage.setItem('PRE_V19', JSON.stringify(p)); refresh(); 
     }
 
-    function syncUI() {
-        const p = JSON.parse(localStorage.getItem('E_V18_PRE'));
-        document.getElementById('b-card').classList.toggle('active', p.obj === 'card');
-        document.getElementById('b-cash').classList.toggle('active', p.obj === 'cash');
-        if(p.port) { document.getElementById('b-port').style.borderColor = "var(--accent)"; document.getElementById('b-port').innerText = "ÁLLÓ OK"; }
-        if(p.land) { document.getElementById('b-land').style.borderColor = "var(--accent)"; document.getElementById('b-land').innerText = "FEKVŐ OK"; }
-        if(p.port && p.land) document.getElementById('pane-finish').style.display = 'block';
+    function refresh() {
+        const p = JSON.parse(localStorage.getItem('PRE_V19'));
+        document.getElementById('b-card').classList.toggle('active', p.obj==='card');
+        document.getElementById('b-cash').classList.toggle('active', p.obj==='cash');
+        if(p.port) document.getElementById('b-port').style.borderColor = "var(--accent)";
+        if(p.land) document.getElementById('b-land').style.borderColor = "var(--accent)";
+        if(p.port && p.land) document.getElementById('pane-fin').style.display = 'block';
     }
 
-    function goAdj(m) {
-        saveP('mode', m);
-        document.getElementById('pane-1').style.display = 'none';
-        document.getElementById('pane-2').style.display = 'block';
-        document.getElementById('adj-title').innerText = (m === 'port' ? "Álló" : "Fekvő") + " vonal";
-    }
-
-    function doneAdj() {
-        const p = JSON.parse(localStorage.getItem('E_V18_PRE'));
+    function openAdj(m) { save('mode', m); document.getElementById('pane-1').style.display='none'; document.getElementById('pane-2').style.display='block'; }
+    function closeAdj() {
+        const p = JSON.parse(localStorage.getItem('PRE_V19'));
         const ref = p.obj === 'card' ? 85.6 : 70.0;
-        const val = document.getElementById('cal-line').offsetWidth / ref;
-        saveP(p.mode, val);
-        document.getElementById('pane-2').style.display = 'none';
-        document.getElementById('pane-1').style.display = 'block';
-        syncUI();
+        save(p.mode, document.getElementById('cal-line').offsetWidth / ref);
+        document.getElementById('pane-2').style.display='none'; document.getElementById('pane-1').style.display='block';
     }
 
-    function finishReg() {
-        const p = JSON.parse(localStorage.getItem('E_V18_PRE'));
-        const n = document.getElementById('in-name').value || "Elite Device";
-        localStorage.setItem('E_V18_FINAL', JSON.stringify({name:n, port:p.port, land:p.land}));
-        localStorage.removeItem('E_V18_PRE');
+    function finish() {
+        const p = JSON.parse(localStorage.getItem('PRE_V19'));
+        localStorage.setItem('ELITE_V19', JSON.stringify({name: document.getElementById('in-name').value || "Eszköz", port:p.port, land:p.land}));
         location.reload();
     }
 
     function reset() { localStorage.clear(); location.reload(); }
 
-    function bindHold(id, d) {
+    // + / - gombok
+    function hold(id, d) {
         const b = document.getElementById(id), l = document.getElementById('cal-line');
-        const start = (e) => {
-            e.preventDefault(); spd = 1;
-            l.style.width = (l.offsetWidth + d) + "px";
-            hT = setTimeout(() => {
-                hI = setInterval(() => {
-                    l.style.width = (l.offsetWidth + (d * Math.floor(spd))) + "px";
-                    if(spd < 15) spd += 0.5;
-                }, 40);
-            }, 250);
-        };
-        const stop = () => { clearTimeout(hT); clearInterval(hI); };
-        b.addEventListener('touchstart', start); b.addEventListener('touchend', stop);
+        b.addEventListener('touchstart', (e) => {
+            e.preventDefault(); spd = 1; l.style.width = (l.offsetWidth + d) + "px";
+            hT = setTimeout(() => { hI = setInterval(() => { l.style.width = (l.offsetWidth + (d * Math.floor(spd))) + "px"; if(spd<15) spd+=0.5; }, 40); }, 250);
+        });
+        b.addEventListener('touchend', () => { clearTimeout(hT); clearInterval(hI); });
     }
-    bindHold('btn-plus', 1); bindHold('btn-minus', -1);
+    hold('btn-p', 1); hold('btn-m', -1);
 
-    function launch() {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('canvas').style.display = 'block';
-        redraw();
-    }
+    function launch() { document.getElementById('overlay').style.display='none'; canvas.style.display='block'; redraw(); }
 
-    const box = document.getElementById('box');
-    let sX, sY, sW, sH, sL, sT;
-
-    document.getElementById('h-move').addEventListener('pointerdown', (e) => {
-        activeAct = 'm'; sX = e.clientX; sY = e.clientY; sL = box.offsetLeft; sT = box.offsetTop;
+    // DOBOZ MOZGATÁS - AZ EREDETI STABIL LOGIKA
+    document.getElementById('h-move').addEventListener('pointerdown', e => {
+        active = 'm'; sX = e.clientX; sY = e.clientY; sL = box.offsetLeft; sT = box.offsetTop;
+        e.target.setPointerCapture(e.pointerId);
+    });
+    document.getElementById('h-res').addEventListener('pointerdown', e => {
+        active = 'r'; sX = e.clientX; sY = e.clientY; sW = box.offsetWidth; sH = box.offsetHeight;
         e.target.setPointerCapture(e.pointerId);
     });
 
-    document.getElementById('h-res').addEventListener('pointerdown', (e) => {
-        activeAct = 'r'; sX = e.clientX; sY = e.clientY; sW = box.offsetWidth; sH = box.offsetHeight;
-        e.target.setPointerCapture(e.pointerId);
-    });
-
-    window.addEventListener('pointermove', (e) => {
-        if(!activeAct) return;
-        if(activeAct === 'm') { 
-            box.style.left = (sL + (e.clientX - sX)) + "px"; 
-            box.style.top = (sT + (e.clientY - sY)) + "px"; 
-        } else { 
-            box.style.width = Math.max(30, sW + (e.clientX - sX)) + "px"; 
-            box.style.height = Math.max(30, sH + (e.clientY - sY)) + "px"; 
-        }
+    window.addEventListener('pointermove', e => {
+        if(!active) return;
+        if(active === 'm') { box.style.left = (sL + (e.clientX - sX)) + "px"; box.style.top = (sT + (e.clientY - sY)) + "px"; }
+        else { box.style.width = Math.max(30, sW + (e.clientX - sX)) + "px"; box.style.height = Math.max(30, sH + (e.clientY - sY)) + "px"; }
         redraw();
     });
-
-    window.addEventListener('pointerup', () => activeAct = null);
+    window.addEventListener('pointerup', () => active = null);
 
     function redraw() {
-        const d = JSON.parse(localStorage.getItem('E_V18_FINAL'));
-        if(!d) return;
-        let ppmm = (window.innerHeight > window.innerWidth) ? d.port : d.land;
-        const w = (box.offsetWidth / ppmm).toFixed(1);
-        const h = (box.offsetHeight / ppmm).toFixed(1);
+        const f = JSON.parse(localStorage.getItem('ELITE_V19'));
+        let ppmm = (window.innerHeight > window.innerWidth) ? f.port : f.land;
+        const w = (box.offsetWidth / ppmm).toFixed(1), h = (box.offsetHeight / ppmm).toFixed(1);
         document.getElementById('lbl-w').innerText = w + " mm";
         document.getElementById('lbl-h').innerText = h + " mm";
-        document.getElementById('in-w').value = w;
-        document.getElementById('in-h').value = h;
+        document.getElementById('in-w').value = w; document.getElementById('in-h').value = h;
     }
 
-    function applyIn() {
-        const d = JSON.parse(localStorage.getItem('E_V18_FINAL'));
-        let ppmm = (window.innerHeight > window.innerWidth) ? d.port : d.land;
+    function apply() {
+        const f = JSON.parse(localStorage.getItem('ELITE_V19'));
+        let ppmm = (window.innerHeight > window.innerWidth) ? f.port : f.land;
         box.style.width = (document.getElementById('in-w').value * ppmm) + "px";
         box.style.height = (document.getElementById('in-h').value * ppmm) + "px";
         redraw();
