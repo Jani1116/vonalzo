@@ -13,7 +13,7 @@
             overflow: hidden !important;
             position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif; 
-            -webkit-user-select: none; user-select: none;
+            touch-action: none; -webkit-user-select: none;
         }
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
@@ -23,7 +23,7 @@
         .cal-v-right { position: absolute; right: 0; top: -30px; width: 3px; height: 60px; background: var(--accent); }
         #cal-handle { position: absolute; right: -25px; top: -40px; width: 50px; height: 80px; z-index: 50; touch-action: none; background: transparent; }
         #login-screen { text-align: center; }
-        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; }
+        #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; cursor: pointer; }
         #canvas { display: none; width: 100%; height: 100%; position: relative; touch-action: none; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; touch-action: none; }
         .handle { width: 34px; height: 34px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; touch-action: none; }
@@ -31,10 +31,9 @@
         #resize-handle { bottom: -17px; right: -17px; background: var(--accent); }
         .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: var(--bg); padding: 0 5px; white-space: nowrap; }
         .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 130px; text-align: center; background: var(--bg); }
-        #controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; background: rgba(25,25,25,0.95); padding: 10px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 4000; backdrop-filter: blur(10px); }
-        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 50px; text-align: center; font-size: 14px; }
-        .f-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 5px; font-weight: bold; font-size: 18px; }
-        .ok-btn { background: var(--accent); border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; color: #000; margin-left: 5px; }
+        #controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(25,25,25,0.95); padding: 12px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; backdrop-filter: blur(10px); }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 65px; text-align: center; font-size: 16px; }
+        .ok-btn { background: var(--accent); border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; color: #000; }
         .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; }
         .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
         .adj-btn { background: #333; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; }
@@ -42,7 +41,7 @@
         .fix-btn.active { border-color: var(--accent); color: var(--accent); background: var(--box-bg); }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
 <div id="overlay">
     <div id="login-screen" style="display:none;">
@@ -85,14 +84,10 @@
         <div id="resize-handle" class="handle"></div>
     </div>
     <div id="controls">
-        <button class="f-btn" id="btn-w-minus">-</button>
-        <input type="number" id="m-w" class="m-input" inputmode="decimal">
-        <button class="f-btn" id="btn-w-plus">+</button>
-        <span style="width:8px"></span>
-        <button class="f-btn" id="btn-h-minus">-</button>
-        <input type="number" id="m-h" class="m-input" inputmode="decimal">
-        <button class="f-btn" id="btn-h-plus">+</button>
-        <button id="btn-ok" class="ok-btn">OK</button>
+        <input type="number" id="m-w" class="m-input" inputmode="decimal" placeholder="Szél.">
+        <span style="color:#666">×</span>
+        <input type="number" id="m-h" class="m-input" inputmode="decimal" placeholder="Mag.">
+        <button onclick="setManual()" class="ok-btn">OK</button>
     </div>
 </div>
 
@@ -101,11 +96,8 @@
     let startX, startW, bStartX, bStartY, bStartW, bStartH, bStartLeft, bStartTop;
     let temp_port = null, temp_land = null;
 
-    // Lefelé húzás (pull-to-refresh) letiltása
-    window.addEventListener('touchstart', (e) => {
-        if (e.touches[0].pageY < 50) e.preventDefault();
-    }, {passive: false});
-    window.addEventListener('touchmove', (e) => { e.preventDefault(); }, {passive: false});
+    // Pull-to-refresh tiltása
+    document.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
 
     const box = document.getElementById('box');
     const calMainLine = document.getElementById('cal-main-line');
@@ -117,8 +109,7 @@
         const saved = JSON.parse(localStorage.getItem(getDeviceId()));
         if(!saved) return 1;
         const isPort = window.innerHeight > window.innerWidth;
-        const basePPM = isPort ? saved.port : saved.land;
-        return basePPM / window.devicePixelRatio;
+        return (isPort ? saved.port : saved.land) / window.devicePixelRatio;
     }
 
     window.onload = () => {
@@ -135,6 +126,8 @@
         }
     };
 
+    window.addEventListener('resize', updateLabel);
+
     function updateLabel() {
         const ppmm = getPPM();
         const w = (box.offsetWidth / ppmm).toFixed(1);
@@ -145,7 +138,6 @@
         document.getElementById('m-h').value = h;
     }
 
-    // Mozgatás és méretezés (Pointer events - marad a jól működő logika)
     calHandle.addEventListener('pointerdown', (e) => {
         activeAction = 'cal'; startX = e.clientX; startW = calMainLine.offsetWidth;
         calHandle.setPointerCapture(e.pointerId);
@@ -177,33 +169,15 @@
 
     window.addEventListener('pointerup', () => activeAction = null);
 
-    // GOMBOK JAVÍTÁSA (Touch eseményekkel a biztos működésért)
-    function adj(t, v) {
-        const ppmm = getPPM();
-        if (t === 'w') box.style.width = Math.max(10, box.offsetWidth + (v * ppmm)) + "px";
-        else box.style.height = Math.max(10, box.offsetHeight + (v * ppmm)) + "px";
-        updateLabel();
-    }
-
-    const bindBtn = (id, fn) => {
-        const el = document.getElementById(id);
-        el.addEventListener('touchstart', (e) => { e.preventDefault(); fn(); }, {passive: false});
-    };
-
-    bindBtn('btn-w-minus', () => adj('w', -0.1));
-    bindBtn('btn-w-plus', () => adj('w', 0.1));
-    bindBtn('btn-h-minus', () => adj('h', -0.1));
-    bindBtn('btn-h-plus', () => adj('h', 0.1));
-    bindBtn('btn-ok', () => {
+    function setManual() {
         const ppmm = getPPM();
         const w = document.getElementById('m-w').value;
         const h = document.getElementById('m-h').value;
         if(w) box.style.width = (w * ppmm) + "px";
         if(h) box.style.height = (h * ppmm) + "px";
         updateLabel();
-    });
+    }
 
-    // Kalibrációs segédfunkciók
     function lockValue(o) {
         const val = (calMainLine.offsetWidth * window.devicePixelRatio) / parseFloat(document.getElementById('calRef').value);
         if(o === 'port') temp_port = val; else temp_land = val;
