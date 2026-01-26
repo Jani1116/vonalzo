@@ -9,32 +9,37 @@
     <style>
         :root { --accent: #30d158; --bg: #000; --box-bg: rgba(48, 209, 88, 0.1); }
         html, body { 
-            overscroll-behavior: none !important; 
-            overflow: hidden !important;
+            overscroll-behavior: none !important; overflow: hidden !important;
             position: fixed; width: 100vw; height: 100vh; margin: 0; padding: 0;
             background: var(--bg); color: #fff; font-family: sans-serif; 
-            touch-action: none; -webkit-user-select: none;
+            touch-action: none !important; -webkit-user-select: none;
         }
+        #barrier { position: fixed; top: 0; left: 0; width: 100%; height: 1px; z-index: 10000; background: transparent; }
         #overlay { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        
         .setup-input { background: #1a1a1a; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; width: 180px; margin: 10px; text-align: center; font-size: 16px; }
         #cal-area { position: relative; margin: 20px 0; height: 100px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 400px; }
         #cal-main-line { height: 2px; background: #fff; width: 200px; position: relative; }
         .cal-v-left { position: absolute; left: 0; top: -30px; width: 2px; height: 60px; background: #fff; }
         .cal-v-right { position: absolute; right: 0; top: -30px; width: 3px; height: 60px; background: var(--accent); }
         #cal-handle { position: absolute; right: -25px; top: -40px; width: 50px; height: 80px; z-index: 50; touch-action: none; background: transparent; }
+
         #login-screen { text-align: center; }
         #saved-btn { background: #111; border: 2px solid var(--accent); color: #fff; padding: 25px; border-radius: 15px; width: 280px; margin-bottom: 20px; text-align: center; cursor: pointer; }
+        
         #canvas { display: none; width: 100%; height: 100%; position: relative; touch-action: none; }
         #box { position: absolute; top: 100px; left: 100px; border: 2px solid var(--accent); background: var(--box-bg); box-sizing: border-box; touch-action: none; }
         .handle { width: 34px; height: 34px; border-radius: 50%; position: absolute; z-index: 20; border: 2px solid #000; touch-action: none; }
         #move-handle { top: -17px; left: -17px; background: #fff; }
         #resize-handle { bottom: -17px; right: -17px; background: var(--accent); }
+        
         .label-w { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--accent); font-weight: bold; background: var(--bg); padding: 0 5px; white-space: nowrap; }
         .label-h { position: absolute; left: -75px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 14px; color: var(--accent); font-weight: bold; width: 130px; text-align: center; background: var(--bg); }
-        #controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(25,25,25,0.95); padding: 12px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; backdrop-filter: blur(10px); }
-        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 65px; text-align: center; font-size: 16px; }
-        .ok-btn { background: var(--accent); border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; color: #000; }
-        .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; }
+        
+        #controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(25,25,25,0.95); padding: 12px; border-radius: 12px; border: 1px solid #444; align-items: center; z-index: 100; backdrop-filter: blur(10px); }
+        .m-input { background: #000; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 5px; width: 65px; text-align: center; font-size: 15px; }
+        .ok-btn { background: var(--accent); border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; color: #000; }
+        .cal-type-btn { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; flex: 1; font-size: 14px; }
         .cal-type-btn.active { border-color: var(--accent); background: var(--box-bg); }
         .adj-btn { background: #333; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; }
         .fix-btn { background: #111; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; width: 140px; margin: 5px; font-size: 11px; font-weight: bold; }
@@ -43,11 +48,13 @@
 </head>
 <body oncontextmenu="return false;">
 
+<div id="barrier"></div>
+
 <div id="overlay">
     <div id="login-screen" style="display:none;">
         <div id="saved-btn" onclick="initApp()">
             <div id="s-name" style="font-weight:bold; font-size:22px;"></div>
-            <div id="s-ppi" style="color:var(--accent); font-size:14px; margin-top:5px;">Profil Betöltve</div>
+            <div id="s-ppi" style="color:var(--accent); font-size:14px; margin-top:5px;">Android Profil Betöltve</div>
         </div>
         <button onclick="showRegister()" style="background:none; border:1px solid #444; color:#888; padding:10px; border-radius:8px;">Új kalibrálás</button>
     </div>
@@ -70,7 +77,7 @@
             <button id="fix-port" class="fix-btn" onclick="lockValue('port')">ÁLLÓ RÖGZÍTÉS</button>
             <button id="fix-land" class="fix-btn" onclick="lockValue('land')">FEKVŐ RÖGZÍTÉS</button>
         </div>
-        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve">
+        <input type="text" id="devName" class="setup-input" placeholder="Eszköz neve" value="Samsung Galaxy">
         <br>
         <button id="main-save-btn" onclick="doCalibrate()" style="background:#222; border:1px solid #444; padding:15px 40px; border-radius:10px; font-weight:bold; color:#555; margin-top:5px;">MENTÉS</button>
     </div>
@@ -96,28 +103,24 @@
     let startX, startW, bStartX, bStartY, bStartW, bStartH, bStartLeft, bStartTop;
     let temp_port = null, temp_land = null;
 
-    // Pull-to-refresh tiltása
-    document.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
-
     const box = document.getElementById('box');
     const calMainLine = document.getElementById('cal-main-line');
     const calHandle = document.getElementById('cal-handle');
 
-    const getDeviceId = () => "dev_" + Math.max(screen.width, screen.height) + "_" + Math.min(screen.width, screen.height);
+    // Egyedi eszközazonosító generálása a felbontás alapján (Note vs Tab elkülönítése)
+    const getDeviceId = () => "elite_v2_" + Math.max(screen.width, screen.height) + "_" + Math.min(screen.width, screen.height);
 
     function getPPM() {
         const saved = JSON.parse(localStorage.getItem(getDeviceId()));
         if(!saved) return 1;
         const isPort = window.innerHeight > window.innerWidth;
-        return (isPort ? saved.port : saved.land) / window.devicePixelRatio;
+        const basePPM = isPort ? saved.port : saved.land;
+        return basePPM / window.devicePixelRatio;
     }
 
     window.onload = () => {
         const deviceId = getDeviceId();
         const saved = localStorage.getItem(deviceId);
-        if(!document.getElementById('devName').value) {
-            document.getElementById('devName').value = screen.width > 900 ? "Samsung Tab S7 FE" : "Samsung Note 20 Ultra";
-        }
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
@@ -127,6 +130,14 @@
     };
 
     window.addEventListener('resize', updateLabel);
+
+    function lockValue(o) {
+        const val = (calMainLine.offsetWidth * window.devicePixelRatio) / parseFloat(document.getElementById('calRef').value);
+        if(o === 'port') temp_port = val;
+        else temp_land = val;
+        updateUI(o);
+        checkReady();
+    }
 
     function updateLabel() {
         const ppmm = getPPM();
@@ -178,15 +189,24 @@
         updateLabel();
     }
 
-    function lockValue(o) {
-        const val = (calMainLine.offsetWidth * window.devicePixelRatio) / parseFloat(document.getElementById('calRef').value);
-        if(o === 'port') temp_port = val; else temp_land = val;
+    function setCalType(type) {
+        document.getElementById('calRef').value = (type === 'card') ? "85.6" : "70.0";
+        document.getElementById('btn-card').classList.toggle('active', type === 'card');
+        document.getElementById('btn-cash').classList.toggle('active', type === 'cash');
+    }
+
+    function adjCal(val) { calMainLine.style.width = Math.max(20, calMainLine.offsetWidth + val) + "px"; }
+    
+    function updateUI(o) {
         const btn = document.getElementById('fix-' + o);
         btn.classList.add('active');
         btn.innerText = o === 'port' ? "ÁLLÓ OK ✓" : "FEKVŐ OK ✓";
+    }
+
+    function checkReady() {
         if(temp_port && temp_land) {
             const b = document.getElementById('main-save-btn');
-            b.style.background = "var(--accent)"; b.style.color = "#000";
+            b.style.background = "var(--accent)"; b.style.color = "#000"; b.style.borderColor = "var(--accent)";
         }
     }
 
@@ -203,18 +223,13 @@
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('canvas').style.display = 'block';
         updateLabel();
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
     }
 
-    function setCalType(type) {
-        document.getElementById('calRef').value = (type === 'card') ? "85.6" : "70.0";
-        document.getElementById('btn-card').classList.toggle('active', type === 'card');
-        document.getElementById('btn-cash').classList.toggle('active', type === 'cash');
-    }
-
-    function adjCal(val) { calMainLine.style.width = Math.max(20, calMainLine.offsetWidth + val) + "px"; }
-    function showRegister() { 
-        document.getElementById('login-screen').style.display = 'none'; 
-        document.getElementById('register-screen').style.display = 'block'; 
+    function showRegister() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('register-screen').style.display = 'block';
     }
 </script>
 </body>
