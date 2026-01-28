@@ -107,7 +107,6 @@
     const calMainLine = document.getElementById('cal-main-line');
     const calHandle = document.getElementById('cal-handle');
 
-    // Egyedi eszközazonosító generálása a felbontás alapján (Note vs Tab elkülönítése)
     const getDeviceId = () => "elite_v2_" + Math.max(screen.width, screen.height) + "_" + Math.min(screen.width, screen.height);
 
     function getPPM() {
@@ -121,6 +120,14 @@
     window.onload = () => {
         const deviceId = getDeviceId();
         const saved = localStorage.getItem(deviceId);
+        
+        // Visszatöltés forgatás utáni megőrzéshez
+        const pVal = localStorage.getItem('temp_cal_port');
+        const lVal = localStorage.getItem('temp_cal_land');
+        if(pVal) { temp_port = parseFloat(pVal); updateUI('port'); }
+        if(lVal) { temp_land = parseFloat(lVal); updateUI('land'); }
+        checkReady();
+
         if (saved) {
             const d = JSON.parse(saved);
             document.getElementById('s-name').innerText = d.name;
@@ -133,8 +140,13 @@
 
     function lockValue(o) {
         const val = (calMainLine.offsetWidth * window.devicePixelRatio) / parseFloat(document.getElementById('calRef').value);
-        if(o === 'port') temp_port = val;
-        else temp_land = val;
+        if(o === 'port') {
+            temp_port = val;
+            localStorage.setItem('temp_cal_port', val);
+        } else {
+            temp_land = val;
+            localStorage.setItem('temp_cal_land', val);
+        }
         updateUI(o);
         checkReady();
     }
@@ -216,6 +228,8 @@
             name: document.getElementById('devName').value || "Eszköz",
             port: temp_port, land: temp_land
         }));
+        localStorage.removeItem('temp_cal_port');
+        localStorage.removeItem('temp_cal_land');
         location.reload();
     }
 
