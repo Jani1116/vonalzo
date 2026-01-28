@@ -62,7 +62,7 @@
     <div id="register-screen" style="text-align:center;">
         <h3 style="color:var(--accent); margin-bottom:10px;">Kalibrálás</h3>
         <div style="display: flex; gap: 10px; width: 310px; margin: 0 auto 15px;">
-            <button id="btn-card" class="cal-type-btn active" onclick="setCalType('card')">Személyi</button>
+            <button id="btn-card" class="cal-type-btn active" onclick="setCalType('card')">Személyi (rövid)</button>
             <button id="btn-cash" class="cal-type-btn" onclick="setCalType('cash')">Papírpénz</button>
         </div>
         <div id="cal-area">
@@ -70,7 +70,7 @@
         </div>
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">
             <button class="adj-btn" onclick="adjCal(-1)">-</button>
-            <input type="number" id="calRef" class="setup-input" style="width: 80px; margin: 0;" value="85.6" readonly>
+            <input type="number" id="calRef" class="setup-input" style="width: 80px; margin: 0;" value="54.0" readonly>
             <button class="adj-btn" onclick="adjCal(1)">+</button>
         </div>
         <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 10px;">
@@ -121,7 +121,6 @@
         const deviceId = getDeviceId();
         const saved = localStorage.getItem(deviceId);
         
-        // Visszatöltés forgatás utáni megőrzéshez
         const pVal = localStorage.getItem('temp_cal_port');
         const lVal = localStorage.getItem('temp_cal_land');
         if(pVal) { temp_port = parseFloat(pVal); updateUI('port'); }
@@ -202,7 +201,7 @@
     }
 
     function setCalType(type) {
-        document.getElementById('calRef').value = (type === 'card') ? "85.6" : "70.0";
+        document.getElementById('calRef').value = (type === 'card') ? "54.0" : "70.0";
         document.getElementById('btn-card').classList.toggle('active', type === 'card');
         document.getElementById('btn-cash').classList.toggle('active', type === 'cash');
     }
